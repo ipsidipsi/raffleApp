@@ -1,0 +1,7 @@
+{
+  "name": "raffleApp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
