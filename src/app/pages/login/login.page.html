@@ -1,0 +1,39 @@
+<ion-content class="login-container">
+
+  <div class="login-wrapper">
+
+    <!-- Left Side (Image) -->
+    <div class="login-image">
+      <img src="assets/images/ISELCO1LOGO.png" alt="Iselco1" />
+    </div>
+
+    <!-- Right Side (Form) -->
+    <div class="login-form">
+      <form [formGroup]="loginForm" (ngSubmit)="login()">
+
+        <h2>Login</h2>
+
+        <ion-item>
+          <ion-label position="floating">Username</ion-label>
+          <ion-input type="text" formControlName="username"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="floating">Password</ion-label>
+          <ion-input type="password" formControlName="password"></ion-input>
+        </ion-item>
+
+        <div *ngIf="errorMessage" class="error-message">
+          {{ errorMessage }}
+        </div>
+
+        <ion-button expand="block" type="submit" [disabled]="!loginForm.valid">
+          Login
+        </ion-button>
+
+      </form>
+    </div>
+
+  </div>
+
+</ion-content>
