@@ -1,4 +1,7 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 export const environment = {
   production: true,
-  apiUrl:'192.168.143.164:3000',
+  apiUrl: process.env['API_URL'] || '26.131.195.44:3000',
 };

@@ -6,11 +6,20 @@ import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
-import { LoginPage } from './pages/login/login.page';
+//import { LoginPage } from './pages/login/login.page';
+import { ReactiveFormsModule } from '@angular/forms';
+import { MenuModule } from './menu/menu.module';
+import { MenuComponent } from './menu/menu.component';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule,HttpClientModule ],
+  imports: [
+    BrowserModule,
+    IonicModule.forRoot(),
+    AppRoutingModule,
+    HttpClientModule,
+    ReactiveFormsModule,
+    MenuModule ],
   providers: [{ provide: RouteReuseStrategy, useClass: IonicRouteStrategy }],
   bootstrap: [AppComponent],
 })

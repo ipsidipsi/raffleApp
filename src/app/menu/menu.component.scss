@@ -1,0 +1,21 @@
+ion-menu {
+  --width: 250px;
+}
+
+ion-header {
+  --background: #fff;
+}
+
+ion-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+ion-item {
+  --background: transparent;
+  --color: #000;
+}
+
+ion-item[disabled] {
+  --color: #ccc;
+}

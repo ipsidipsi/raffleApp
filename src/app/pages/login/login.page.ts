@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
+import { AuthService } from 'src/app/auth.service';
 
 @Component({
   standalone:false,
@@ -17,7 +18,8 @@ export class LoginPage {
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.loginForm = this.fb.group({
       username: ['', Validators.required],
@@ -27,20 +29,21 @@ export class LoginPage {
 
   login() {
     if (this.loginForm.valid) {
-      this.http
-        .post(`${environment.apiUrl}/auth/login`, this.loginForm.value)
-        .subscribe({
-          next: (res: any) => {
-            console.log('Login success', res);
-            // Store token (optional)
-            localStorage.setItem('token', res.token);
-            this.router.navigate(['/home']);
-          },
-          error: (err) => {
-            this.errorMessage = 'Invalid username or password';
-            console.error(err);
-          },
-        });
+      this.authService.login(this.loginForm.value.username, this.loginForm.value.password).subscribe({
+        next: (res: any) => {
+          console.log('Login success', res);
+          // Set a default role for demonstration if not present
+          if (!res.role) {
+            res.role = 'admin';
+          }
+          localStorage.setItem('user', JSON.stringify(res));
+          this.router.navigate(['/home']);
+        },
+        error: (err) => {
+          this.errorMessage = 'Invalid username or password';
+          console.error(err);
+        },
+      });
     }
   }
 }

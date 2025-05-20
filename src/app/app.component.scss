@@ -1,0 +1,10 @@
+ion-menu {
+  --ion-menu-width: 300px;
+  --ion-menu-type: overlay;
+}
+
+@media (min-width: 768px) {
+  ion-menu {
+    --ion-menu-type: reveal;
+  }
+}
