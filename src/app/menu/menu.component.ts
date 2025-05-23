@@ -30,10 +30,15 @@ export class MenuComponent {
 
   checkUserRole() {
     const role = this.authService.getUserRole();
+    console.log('Menu - User Role:', role); // Log the user role in the menu
     this.isAdmin = role === 'admin';
   }
 
   navigateTo(page: string) {
     this.router.navigate([page]);
+  }
+  logout() {
+    this.authService.logout(); // Ensure you have a logout method in AuthService
+    this.router.navigate(['/login']);
   }
 }

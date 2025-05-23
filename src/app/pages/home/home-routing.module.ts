@@ -2,6 +2,8 @@ import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 
 import { HomePage } from './home.page';
+import { AuthGuard } from 'src/app/auth.guard';
+import { AdminGuard } from 'src/app/admin.guard';
 
 const routes: Routes = [
   {
@@ -14,11 +16,13 @@ const routes: Routes = [
       },
       {
         path: 'raffle',
-        loadChildren: () => import('../raffle/raffle.module').then(m => m.RafflePageModule)
+        loadChildren: () => import('../raffle/raffle.module').then(m => m.RafflePageModule),
+        canActivate: [AdminGuard],
       },
       {
         path: 'reports',
-        loadChildren: () => import('../reports/reports.module').then(m => m.ReportsPageModule)
+        loadChildren: () => import('../reports/reports.module').then(m => m.ReportsPageModule),
+        canActivate: [AdminGuard],
       },
       {
         path: '',

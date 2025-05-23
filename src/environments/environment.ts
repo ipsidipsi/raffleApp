@@ -5,6 +5,8 @@
 export const environment = {
   production: false,
   apiUrl: 'http://localhost:3000' // your NestJS API
+  //apiUrl:'http://26.131.195.44:3000'
+ //apiUrl: process.env['API_URL'] || 'http://26.131.195.44:3000',
 };
 
 /*

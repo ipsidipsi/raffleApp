@@ -1,0 +1,68 @@
+/* registration-modal.component.scss */
+
+ion-content {
+  --background: #f9f9f9;
+}
+
+form {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+ion-list {
+  background-color: transparent !important;
+}
+
+ion-item {
+  --background: transparent;
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+ion-input, ion-textarea {
+  --background: #f7f9fc;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --border-radius: 8px;
+  --border-width: 1px;
+  --border-style: solid;
+  --border-color: #ddd;
+  margin-top: 6px;
+
+  &.ion-valid {
+    --border-color: #2dd36f;
+  }
+
+  &.ion-invalid.ion-touched {
+    --border-color: #eb445a;
+  }
+}
+
+.error-message {
+  color: #eb445a;
+  font-size: 12px;
+  margin: -8px 0 16px 16px;
+}
+
+.form-buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 24px;
+
+  @media (min-width: 576px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+ion-text[color="danger"] {
+  margin-left: 4px;
+}

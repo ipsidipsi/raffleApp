@@ -1,64 +1,58 @@
 <ion-header>
-  <ion-toolbar>
-    <ion-title>Registration</ion-title>
+  <ion-toolbar color="primary">
+    <ion-title>Consumer Registration System</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <!-- Registration Form -->
-  <form [formGroup]="registrationForm" (ngSubmit)="register()">
-    <ion-item>
-      <ion-label>Search by</ion-label>
-      <ion-radio-group [(ngModel)]="searchType" value="accountNumber">
-        <ion-label>Account Number</ion-label>
-        <ion-radio slot="start" value="accountNumber"></ion-radio>
-        <ion-label>Consumer Name</ion-label>
-        <ion-radio slot="start" value="consumerName"></ion-radio>
-        <ion-label>Meter Number</ion-label>
-        <ion-radio slot="start" value="meterNumber"></ion-radio>
-      </ion-radio-group>
-    </ion-item>
-
-    <ion-item>
-      <ion-input [(ngModel)]="searchTerm" placeholder="Search" type="text"></ion-input>
-      <ion-button slot="end" (click)="searchConsumers()">Search</ion-button>
-    </ion-item>
-
-    <ion-item>
-      <ion-label position="floating">Account Number</ion-label>
-      <ion-input formControlName="accountNumber" type="text"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Account Name</ion-label>
-      <ion-input formControlName="consumerName" type="text"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-label position="floating">Address</ion-label>
-      <ion-input formControlName="consumerAddress" type="text"></ion-input>
-    </ion-item>
-
-    <ion-button expand="block" type="submit" [disabled]="!registrationForm.valid">Register</ion-button>
-    <ion-button expand="block" fill="outline" (click)="clearForm()">Clear</ion-button>
-  </form>
-
-  <!-- Registered Accounts Table -->
+  <!-- Table of Registered Consumers -->
   <ion-card>
     <ion-card-header>
-      <ion-card-title>Registered Accounts</ion-card-title>
+      <ion-card-title>Registered Consumers</ion-card-title>
+      <ion-card-subtitle>Total: {{ registeredConsumers.length }}</ion-card-subtitle>
     </ion-card-header>
-    <ion-card-content>
-      <table>
-        <tr>
-          <th>Account Number</th>
-          <th>Account Name</th>
-          <th>Address</th>
-        </tr>
-        <tr *ngFor="let consumer of registeredConsumers">
-          <td>{{ consumer.accountNumber }}</td>
-          <td>{{ consumer.consumerName }}</td>
-          <td>{{ consumer.consumerAddress }}</td>
-        </tr>
+
+    <div class="table-container">
+      <table class="consumers-table">
+        <thead>
+          <tr>
+            <th>Account Number</th>
+            <th>Consumer Name</th>
+            <th>Address</th>
+            <th>Meter Number</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let consumer of registeredConsumers">
+            <td>{{ consumer.accountNumber }}</td>
+            <td>{{ consumer.consumerName }}</td>
+            <td>{{ consumer.consumerAddress }}</td>
+            <td>{{ consumer.meterNumber }}</td>
+          </tr>
+          <tr *ngIf="registeredConsumers.length === 0">
+            <td colspan="4" class="no-data">No consumers registered</td>
+          </tr>
+        </tbody>
       </table>
-    </ion-card-content>
+    </div>
+
+    <!-- Loading indicator -->
+    <div class="loading-container" *ngIf="isLoading">
+      <ion-spinner name="circles"></ion-spinner>
+      <p>Loading consumers...</p>
+    </div>
   </ion-card>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons">
+    <ion-button (click)="openRegistrationModal()" color="primary" expand="block" shape="round">
+      <ion-icon name="person-add-outline" slot="start"></ion-icon>
+      Add New Consumer
+    </ion-button>
+
+    <ion-button (click)="openSearchModal()" color="success" expand="block" shape="round">
+      <ion-icon name="search-outline" slot="start"></ion-icon>
+      Search Consumers
+    </ion-button>
+  </div>
 </ion-content>

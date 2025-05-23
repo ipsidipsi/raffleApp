@@ -7,7 +7,8 @@ import { IonicModule } from '@ionic/angular';
 import { RegistrationPageRoutingModule } from './registration-routing.module';
 
 import { RegistrationPage } from './registration.page';
-
+import { SearchModalComponent } from './search-modal/search-modal.component';
+import { RegistrationModalComponent } from './registration-modal/registration-modal.component';
 @NgModule({
   imports: [
     CommonModule,
@@ -16,7 +17,9 @@ import { RegistrationPage } from './registration.page';
     RegistrationPageRoutingModule,
     ReactiveFormsModule
   ],
-  declarations: [RegistrationPage],
+  declarations: [RegistrationPage,
+    SearchModalComponent,
+    RegistrationModalComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class RegistrationPageModule {

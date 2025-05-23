@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule,CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MenuComponent } from './menu.component';
 import { IonicModule } from '@ionic/angular';
@@ -9,6 +9,7 @@ import { IonicModule } from '@ionic/angular';
     CommonModule,
     IonicModule
   ],
-  exports: [MenuComponent]
+  exports: [MenuComponent],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class MenuModule { }

@@ -1,15 +1,16 @@
 {
-  "name": "raffleApp",
+  "name": "raffle-app",
   "version": "0.0.1",
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
+    "start": "npm run config && ng serve",
+    "build": "npm run config && ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "config":"node src/environments/set-env.js"
   },
   "private": true,
   "dependencies": {
@@ -28,8 +29,11 @@
     "@capacitor/keyboard": "7.0.1",
     "@capacitor/status-bar": "7.0.1",
     "@ionic/angular": "^8.5.7",
+    "crypto-browserify": "^3.12.1",
     "dotenv": "^16.5.0",
     "ionicons": "^7.0.0",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

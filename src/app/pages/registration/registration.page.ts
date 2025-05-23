@@ -3,7 +3,9 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
-import { ToastController } from '@ionic/angular';
+import { LoadingController, ModalController, ToastController } from '@ionic/angular';
+import { RegistrationModalComponent } from './registration-modal/registration-modal.component';
+import { SearchModalComponent } from './search-modal/search-modal.component';
 
 @Component({
   standalone:false,
@@ -24,7 +26,9 @@ export class RegistrationPage implements OnInit {
     private fb: FormBuilder,
     private http: HttpClient,
     private router: Router,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private modalController: ModalController,
+    private loadingController: LoadingController,
   ) {
     this.registrationForm = this.fb.group({
       accountNumber: ['', Validators.required],
@@ -38,11 +42,48 @@ export class RegistrationPage implements OnInit {
       message,
       duration: 2000,
       color,
-      position: 'bottom'
+      position: 'bottom',
+      buttons: [
+        {
+          text: 'Close',
+          role: 'cancel'
+        }
+      ]
     });
     toast.present();
   }
-  register() {
+
+  async openRegistrationModal() {
+    const modal = await this.modalController.create({
+      component: RegistrationModalComponent,
+      cssClass: 'registration-modal'
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data && data.registered) {
+      this.presentToast('Consumer registered successfully!');
+      this.loadRegisteredConsumers();
+    }
+  }
+
+  async openSearchModal() {
+    const modal = await this.modalController.create({
+      component: SearchModalComponent,
+      cssClass: 'search-modal'
+    });
+
+    await modal.present();
+
+    const { data } = await modal.onDidDismiss();
+    if (data && data.selectedConsumer) {
+      // If you want to do anything with the selected consumer
+      // For example, highlight it in the table
+      console.log('Selected consumer:', data.selectedConsumer);
+    }
+  }
+  oldregister() {
     if (this.registrationForm.valid) {
       this.http.post(`${environment.apiUrl}/registration`, this.registrationForm.value).subscribe({
         next: () => {
@@ -115,20 +156,26 @@ selectConsumer(consumer: any) {
   this.searchTerm = ''; // Clear search term
 }
 
-loadRegisteredConsumers() {
-  this.isLoading = true;
+async loadRegisteredConsumers() {
+  const loading = await this.loadingController.create({
+    message: 'Loading ...',
+    spinner: 'circles'
+  });
+
+  await loading.present();
+
   this.http.get(`${environment.apiUrl}/registration/all`).subscribe({
     next: (data) => {
       this.registeredConsumers = data as any[];
-      this.isLoading = false;
+      loading.dismiss();
     },
     error: (err) => {
       console.error('Failed to load registered consumers', err);
-      this.isLoading = false;
+      this.presentToast('Failed to load consumers', 'danger');
+      loading.dismiss();
     }
   });
 }
-
 
 ngOnInit() {
   this.loadRegisteredConsumers();
