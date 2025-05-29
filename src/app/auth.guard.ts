@@ -9,22 +9,32 @@ export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(): boolean {
-    const userRole = this.authService.getUserRole();
-    console.log('Guard - User Role:', userRole); // Log the user role in the guard
-    if (!userRole) {
-      // Redirect to login page if not logged in
+     console.log('AuthGuard - canActivate called');
+
+    // First check if user is logged in (has valid token)
+    const isLoggedIn = this.authService.isLoggedIn();
+    console.log('AuthGuard - isLoggedIn result:', isLoggedIn);
+
+    if (!isLoggedIn) {
       console.log('Guard - Not logged in, redirecting to login');
       this.router.navigate(['/login']);
       return false;
     }
-    // Allow access only for admin
 
+    // Then check role if needed
+    const userRole = this.authService.getUserRole();
+    console.log('Guard - User Role:', userRole);
+
+    // Allow access for any logged-in user
+    //return true;
+
+    // If you want to restrict to specific roles, uncomment and modify:
+    if (userRole === 'admin' || userRole === 'user') {
       return true;
-
-    // Redirect to home if not admin
-    console.log('Guard - User is not admin, redirecting to home');
-    this.router.navigate(['/login']);
-    return false;
-
+    } else {
+      console.log('Guard - Insufficient permissions, redirecting to login');
+      this.router.navigate(['/login']);
+      return false;
+    }
   }
 }
