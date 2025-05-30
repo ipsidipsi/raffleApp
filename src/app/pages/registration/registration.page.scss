@@ -1,51 +1,205 @@
-/* registration.page.scss */
+ion-content {
+  --background: #f9f9f9;
+}
 
-ion-card {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.form-section, .list-section {
+  flex: 1 1 45%;
+  min-width: 300px;
+}
+
+.form-section form {
+  background: #fff;
+  padding: 20px;
   border-radius: 12px;
-  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-ion-card-header {
-  border-bottom: 1px solid #eee;
-}
+.form-group {
+  margin-bottom: 15px;
 
-.table-container {
-  overflow-x: auto;
-  padding: 0 10px 10px;
-}
-
-.consumers-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 10px 0;
-  font-size: 14px;
-
-  th, td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-  }
-
-  th {
-    background-color: #f5f5f5;
-    color: #333;
+  label {
+    display: block;
+    margin-bottom: 5px;
     font-weight: 600;
+    color: #333;
   }
 
-  tr:nth-child(even) {
-    background-color: #f9f9f9;
+  ion-input {
+    --background: #f7f9fc;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    --border-radius: 6px;
+    --border-width: 1px;
+    --border-style: solid;
+    --border-color: #ccc;
+    font-size: 16px;
   }
 
-  tr:hover {
-    background-color: #f1f1f1;
+  ion-input[readonly] {
+    --background: #e9ecef;
+    cursor: not-allowed;
+  }
+}
+
+.input-with-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  ion-input {
+    flex: 1;
   }
 
-  .no-data {
-    text-align: center;
-    color: #888;
-    padding: 30px 0;
+  /* Regular HTML button styling */
+  .search-button {
+    padding: 10px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 6px;
+    white-space: nowrap;
+    height: 44px;
+    
+    &:hover {
+      background-color: #0056b3;
+    }
+    
+    &:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
   }
+}
+
+/* Regular HTML button for register */
+.register-btn {
+  margin-top: 10px;
+  padding: 12px 20px;
+  font-size: 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  
+  &:hover {
+    background-color: #218838;
+  }
+  
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+}
+
+.list-section {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+
+  /* Regular HTML input styling */
+  .compact-input {
+    flex: 2;
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    
+    &:focus {
+      outline: none;
+      border-color: #007BFF;
+    }
+  }
+
+  /* Regular HTML select styling */
+  .compact-select {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: white;
+    
+    &:focus {
+      outline: none;
+      border-color: #007BFF;
+    }
+  }
+}
+
+.registrants-container {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.account-card {
+  background-color: #f1f1f1;
+  border-left: 5px solid #007BFF;
+  padding: 15px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  position: relative;
+
+  .primary {
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+  }
+
+  .secondary {
+    font-size: 14px;
+    margin-top: 5px;
+    color: #555;
+  }
+
+  .address {
+    font-size: 12px;
+    color: #777;
+    margin-top: 3px;
+  }
+
+  /* Regular HTML button for delete */
+  .delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #dc3545;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    
+    &:hover {
+      background-color: #c82333;
+    }
+  }
+}
+
+.no-registrants {
+  text-align: center;
+  color: #888;
+  padding: 30px 0;
 }
 
 .loading-container {
@@ -61,22 +215,23 @@ ion-card-header {
   }
 }
 
-.action-buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  margin-top: 20px;
-
-  @media (max-width: 576px) {
-    grid-template-columns: 1fr;
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 20px;
+    padding: 10px;
   }
-}
 
-/* Modal styles will be applied globally */
-:host ::ng-deep .registration-modal .modal-wrapper,
-:host ::ng-deep .search-modal .modal-wrapper {
-  height: auto;
-  max-height: 90%;
-  border-radius: 16px;
-  --backdrop-opacity: 0.6;
+  .form-section, .list-section {
+    flex: 1 1 100%;
+  }
+
+  .search-bar {
+    flex-direction: column;
+    
+    .compact-input, .compact-select {
+      flex: 1;
+    }
+  }
 }

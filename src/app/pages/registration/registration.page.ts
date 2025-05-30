@@ -1,76 +1,61 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
-import { LoadingController, ModalController, ToastController } from '@ionic/angular';
-import { RegistrationModalComponent } from './registration-modal/registration-modal.component';
+import { LoadingController, ModalController, ToastController, AlertController } from '@ionic/angular';
 import { SearchModalComponent } from './search-modal/search-modal.component';
 
 @Component({
-  standalone:false,
+   standalone:false,
   selector: 'app-registration',
   templateUrl: './registration.page.html',
   styleUrls: ['./registration.page.scss'],
 })
 export class RegistrationPage implements OnInit {
   registrationForm: FormGroup;
-  consumers: any[] = [];
-  searchTerm: string = '';
-  selectedConsumer: any = null; // Property to hold the selected consumer
-  searchType: string = 'accountNumber'; // Add property for selected
-  registeredConsumers: any[] = []; // Property to hold the list of registered consumers
+  registeredConsumers: any[] = [];
+  filteredRegistrants: any[] = [];
+  filterType: string = 'stubNumber';
+  searchFilter: string = '';
   isLoading = false;
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private router: Router,
     private toastController: ToastController,
     private modalController: ModalController,
     private loadingController: LoadingController,
+    private alertController: AlertController
   ) {
     this.registrationForm = this.fb.group({
-      accountNumber: ['', Validators.required],
-      consumerName: ['', Validators.required], // Add consumerName control
-      consumerAddress: ['', Validators.required], // Add address control
-      meterNumber: ['', Validators.required], // Add meterNumber// Add more form controls as needed
+      stubNumber: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
+      accountNumber: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      consumerName: ['', Validators.required],
+      consumerAddress: ['', Validators.required],
+      meterNumber: ['']
     });
   }
-  async presentToast(message: string, color: string = 'success') {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'bottom',
-      buttons: [
-        {
-          text: 'Close',
-          role: 'cancel'
-        }
-      ]
-    });
-    toast.present();
+
+  ngOnInit() {
+    this.loadRegisteredConsumers();
   }
 
-  async openRegistrationModal() {
-    const modal = await this.modalController.create({
-      component: RegistrationModalComponent,
-      cssClass: 'registration-modal'
-    });
-
-    await modal.present();
-
-    const { data } = await modal.onDidDismiss();
-    if (data && data.registered) {
-      this.presentToast('Consumer registered successfully!');
-      this.loadRegisteredConsumers();
-    }
+  onStubNumberInput(event: any) {
+    let value = event.target.value.replace(/[^0-9]/g, '').slice(0, 5);
+    this.registrationForm.patchValue({ stubNumber: value });
   }
 
-  async openSearchModal() {
+  onAccountNumberInput(event: any) {
+    let value = event.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+    this.registrationForm.patchValue({ accountNumber: value });
+  }
+
+  async openSearchModal(searchType: 'accountNumber' | 'consumerName') {
     const modal = await this.modalController.create({
       component: SearchModalComponent,
+      componentProps: {
+        searchType: searchType
+      },
       cssClass: 'search-modal'
     });
 
@@ -78,107 +63,147 @@ export class RegistrationPage implements OnInit {
 
     const { data } = await modal.onDidDismiss();
     if (data && data.selectedConsumer) {
-      // If you want to do anything with the selected consumer
-      // For example, highlight it in the table
-      console.log('Selected consumer:', data.selectedConsumer);
-    }
-  }
-  oldregister() {
-    if (this.registrationForm.valid) {
-      this.http.post(`${environment.apiUrl}/registration`, this.registrationForm.value).subscribe({
-        next: () => {
-          console.log('Registration successful');
-           // Optionally navigate to another page or display a success message
-           this.loadRegisteredConsumers(); // reload the list
-           this.presentToast('Customer registered successfully!');
-           this.clearForm(); // optional: clear the form
-        },
-        error: (err) => {
-          console.error('Registration failed', err);
-        },
-      });
+      this.populateFormFromSelectedConsumer(data.selectedConsumer);
     }
   }
 
-  // searchConsumers() {
-  //   this.http.get(`${environment.apiUrl}/registration/searchAccountMaster?term=${this.searchTerm}`).subscribe({
-  //     next: (data) => {
-  //       this.consumers = data as any[];
-  //     },
-  //     error: (err) => {
-  //       console.error('Search failed', err);
-  //     },
-  //   });
-  // }
-
-  searchConsumers() {
-    // Use 'field' and 'term' query parameters as per the sample API
-    let apiUrl = `${environment.apiUrl}/registration/searchAccountMaster`;
-    // Ensure searchTerm is not empty before making the call
-    if (this.searchTerm.trim() === '') {
-      this.consumers = []; // Clear previous results if search term is empty
-      return;
-    }
-
-    // Construct the URL with 'field' and 'term' parameters
-    apiUrl += `?field=${this.searchType}&term=${this.searchTerm}`;
-
-    this.http.get(apiUrl).subscribe({
-      next: (data) => {
-        this.consumers = data as any[];
-      },
-      error: (err) => {
-        console.error('Search failed', err);
-        this.consumers = []; // Clear results on error
-      },
+  populateFormFromSelectedConsumer(consumer: any) {
+    this.registrationForm.patchValue({
+      accountNumber: consumer.accountNumber,
+      consumerName: consumer.consumerName,
+      consumerAddress: consumer.consumerAddress,
+      meterNumber: consumer.meterNumber
     });
   }
 
-
-// Method to select a consumer from the search results
-selectConsumer(consumer: any) {
-  this.selectedConsumer = consumer;
-  // Populate the form with selected consumer data
-  this.registrationForm.patchValue({
-    accountNumber: consumer.accountNumber, // Assuming your consumer object has these properties
-    consumerName: consumer.consumerName,
-    consumerAddress: consumer.consumerAddress,
-    meterNumber: consumer.meterNumber,
-  });
-  this.consumers = []; // Clear search results after selection
-  this.searchTerm = ''; // Clear search term
-}
- // Method to clear the form and reset state
- clearForm() {
-  this.registrationForm.reset(); // Reset the form controls
-  this.selectedConsumer = null; // Clear the selected consumer
-  this.consumers = []; // Clear search results
-  this.searchTerm = ''; // Clear search term
-}
-
-async loadRegisteredConsumers() {
-  const loading = await this.loadingController.create({
-    message: 'Loading ...',
-    spinner: 'circles'
-  });
-
-  await loading.present();
-
-  this.http.get(`${environment.apiUrl}/registration/all`).subscribe({
-    next: (data) => {
-      this.registeredConsumers = data as any[];
-      loading.dismiss();
-    },
-    error: (err) => {
-      console.error('Failed to load registered consumers', err);
-      this.presentToast('Failed to load consumers', 'danger');
-      loading.dismiss();
+  async register() {
+    if (this.registrationForm.invalid) {
+      await this.presentToast('Please fill in all required fields', 'danger');
+      return;
     }
-  });
-}
 
-ngOnInit() {
-  this.loadRegisteredConsumers();
-}
+    const loading = await this.loadingController.create({
+      message: 'Processing registration...',
+      spinner: 'circles'
+    });
 
+    await loading.present();
+
+    const registrationData = {
+      accountNumber: this.registrationForm.value.accountNumber,
+      stubNumber: this.registrationForm.value.stubNumber
+    };
+
+    this.http.post(`${environment.apiUrl}/registration/`, registrationData).subscribe({
+      next: async (response) => {
+        loading.dismiss();
+        await this.presentSuccessAlert();
+        this.clearForm();
+        this.loadRegisteredConsumers();
+      },
+      error: async (err) => {
+        loading.dismiss();
+        console.error('Registration failed', err);
+        await this.presentToast('Registration failed. Please try again.', 'danger');
+      }
+    });
+  }
+
+  async presentSuccessAlert() {
+    const alert = await this.alertController.create({
+      header: 'Success',
+      message: 'Registration completed successfully!',
+      buttons: ['OK']
+    });
+    await alert.present();
+  }
+
+  clearForm() {
+    this.registrationForm.reset();
+  }
+
+  async loadRegisteredConsumers() {
+    this.isLoading = true;
+    
+    this.http.get(`${environment.apiUrl}/registration/all`).subscribe({
+      next: (data) => {
+        this.registeredConsumers = data as any[];
+        this.filteredRegistrants = [...this.registeredConsumers];
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Failed to load registered consumers', err);
+        this.presentToast('Failed to load consumers', 'danger');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  filterRegistrants() {
+    if (!this.searchFilter.trim()) {
+      this.filteredRegistrants = [...this.registeredConsumers];
+      return;
+    }
+
+    const filter = this.searchFilter.toLowerCase();
+    this.filteredRegistrants = this.registeredConsumers.filter(registrant => {
+      switch (this.filterType) {
+        case 'stubNumber':
+          return registrant.stubNumber?.toString().includes(filter);
+        case 'accountNumber':
+          return registrant.accountNumber?.toLowerCase().includes(filter);
+        case 'consumerName':
+          return registrant.consumerName?.toLowerCase().includes(filter);
+        default:
+          return false;
+      }
+    });
+  }
+
+  trackByRegistrant(index: number, registrant: any): any {
+    return registrant.id || index;
+  }
+
+  async deleteRegistrant(id: number) {
+    const alert = await this.alertController.create({
+      header: 'Confirm Delete',
+      message: 'Are you sure you want to delete this registrant?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Delete',
+          handler: () => {
+            this.performDelete(id);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  performDelete(id: number) {
+    this.http.delete(`${environment.apiUrl}/registration/${id}`).subscribe({
+      next: () => {
+        this.presentToast('Registrant deleted successfully', 'success');
+        this.loadRegisteredConsumers();
+      },
+      error: (err) => {
+        console.error('Delete failed', err);
+        this.presentToast('Failed to delete registrant', 'danger');
+      }
+    });
+  }
+
+  async presentToast(message: string, color: string = 'success') {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      color,
+      position: 'bottom'
+    });
+    toast.present();
+  }
 }

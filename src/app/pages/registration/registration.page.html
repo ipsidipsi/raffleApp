@@ -1,58 +1,128 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>Consumer Registration System</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Register Account</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <!-- Table of Registered Consumers -->
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Registered Consumers</ion-card-title>
-      <ion-card-subtitle>Total: {{ registeredConsumers.length }}</ion-card-subtitle>
-    </ion-card-header>
+  <div class="container">
+    <!-- Form Section -->
+    <div class="form-section">
+      <form [formGroup]="registrationForm" (ngSubmit)="register()">
+        <div class="form-group">
+          <label>Stub Number</label>
+          <ion-input
+            type="text"
+            maxlength="5"
+            formControlName="stubNumber"
+            placeholder="Enter 5 digit stub number"
+            (ionInput)="onStubNumberInput($event)"
+          ></ion-input>
+        </div>
 
-    <div class="table-container">
-      <table class="consumers-table">
-        <thead>
-          <tr>
-            <th>Account Number</th>
-            <th>Consumer Name</th>
-            <th>Address</th>
-            <th>Meter Number</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let consumer of registeredConsumers">
-            <td>{{ consumer.accountNumber }}</td>
-            <td>{{ consumer.consumerName }}</td>
-            <td>{{ consumer.consumerAddress }}</td>
-            <td>{{ consumer.meterNumber }}</td>
-          </tr>
-          <tr *ngIf="registeredConsumers.length === 0">
-            <td colspan="4" class="no-data">No consumers registered</td>
-          </tr>
-        </tbody>
-      </table>
+        <div class="form-group">
+          <label>Account Number</label>
+          <div class="input-with-button">
+            <ion-input
+              type="text"
+              maxlength="10"
+              formControlName="accountNumber"
+              placeholder="Enter 10 digit account number"
+              readonly="true"
+            ></ion-input>
+            <button type="button" class="search-button" (click)="openSearchModal('accountNumber')">
+              Search
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="accountName">Account Name</label>
+          <div class="input-with-button">
+            <ion-input
+              type="text"
+              id="accountName"
+              formControlName="consumerName"
+              class="large-input"
+              readonly="true"
+            ></ion-input>
+            <button type="button" class="search-button" (click)="openSearchModal('consumerName')">
+              Search
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="address">Address</label>
+          <ion-input
+            type="text"
+            id="address"
+            formControlName="consumerAddress"
+            class="large-input"
+            readonly="true"
+          ></ion-input>
+        </div>
+
+        <button 
+          type="submit" 
+          class="register-btn" 
+          [disabled]="registrationForm.invalid"
+        >
+          Register
+        </button>
+      </form>
     </div>
 
-    <!-- Loading indicator -->
-    <div class="loading-container" *ngIf="isLoading">
-      <ion-spinner name="circles"></ion-spinner>
-      <p>Loading consumers...</p>
+    <!-- List Section -->
+    <div class="list-section">
+      <!-- Search Bar with Filter -->
+      <div class="search-bar">
+        <select [(ngModel)]="filterType" class="compact-select">
+          <option value="stubNumber">Stub Number</option>
+          <option value="accountNumber">Account Number</option>
+          <option value="consumerName">Account Name</option>
+        </select>
+        <input
+          type="text"
+          placeholder="Search..."
+          class="compact-input"
+          [(ngModel)]="searchFilter"
+          (input)="filterRegistrants()"
+        />
+      </div>
+
+      <!-- Registrants Cards -->
+      <div class="registrants-container">
+        <div 
+          class="account-card" 
+          *ngFor="let registrant of filteredRegistrants; trackBy: trackByRegistrant"
+        >
+          <button 
+            class="delete-btn" 
+            (click)="deleteRegistrant(registrant.id)"
+          >
+            Delete
+          </button>
+          <div class="primary">
+            Stub #{{ registrant.stubNumber }} | Acc #{{ registrant.accountNumber }}
+          </div>
+          <div class="secondary">{{ registrant.consumerName }}</div>
+          <div class="address">{{ registrant.consumerAddress }}</div>
+        </div>
+
+        <div class="no-registrants" *ngIf="filteredRegistrants.length === 0">
+          <p>No registrants found</p>
+        </div>
+      </div>
+
+      <!-- Loading indicator -->
+      <div class="loading-container" *ngIf="isLoading">
+        <ion-spinner name="circles"></ion-spinner>
+        <p>Loading registrants...</p>
+      </div>
     </div>
-  </ion-card>
-
-  <!-- Action Buttons -->
-  <div class="action-buttons">
-    <ion-button (click)="openRegistrationModal()" color="primary" expand="block" shape="round">
-      <ion-icon name="person-add-outline" slot="start"></ion-icon>
-      Add New Consumer
-    </ion-button>
-
-    <ion-button (click)="openSearchModal()" color="success" expand="block" shape="round">
-      <ion-icon name="search-outline" slot="start"></ion-icon>
-      Search Consumers
-    </ion-button>
   </div>
 </ion-content>

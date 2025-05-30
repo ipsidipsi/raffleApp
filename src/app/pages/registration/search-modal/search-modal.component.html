@@ -1,6 +1,6 @@
 <ion-header>
   <ion-toolbar color="success">
-    <ion-title>Search Consumers</ion-title>
+    <ion-title>{{ getModalTitle() }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="dismissModal()">
         <ion-icon name="close-outline" slot="icon-only"></ion-icon>
@@ -13,23 +13,14 @@
   <div class="search-container">
     <ion-item class="search-box">
       <ion-icon name="search-outline" slot="start" color="medium"></ion-icon>
-      <ion-input [formControl]="searchTerm" placeholder="Enter search term (min 2 characters)"></ion-input>
+      <ion-input 
+        [formControl]="searchTerm" 
+        [placeholder]="getSearchPlaceholder()"
+      ></ion-input>
       <ion-button fill="clear" *ngIf="searchTerm.value" (click)="clearSearch()">
         <ion-icon name="close-circle" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-item>
-
-    <ion-segment [(ngModel)]="searchType" (ionChange)="searchConsumers()" mode="md">
-      <ion-segment-button value="accountNumber">
-        <ion-label>Account #</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="consumerName">
-        <ion-label>Name</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="meterNumber">
-        <ion-label>Meter #</ion-label>
-      </ion-segment-button>
-    </ion-segment>
   </div>
 
   <div class="results-container">
@@ -43,13 +34,14 @@
         <ion-item button detail (click)="selectConsumer(consumer)">
           <ion-avatar slot="start">
             <div class="avatar-placeholder">
-              {{ consumer.consumerName.charAt(0) }}
+              {{ consumer.consumerName?.charAt(0) || '?' }}
             </div>
           </ion-avatar>
           <ion-label>
             <h2>{{ consumer.consumerName }}</h2>
             <p>Account: {{ consumer.accountNumber }}</p>
-            <p>Meter: {{ consumer.meterNumber }}</p>
+            <p>Address: {{ consumer.consumerAddress }}</p>
+            <p *ngIf="consumer.meterNumber">Meter: {{ consumer.meterNumber }}</p>
           </ion-label>
         </ion-item>
       </ion-item-sliding>
@@ -66,8 +58,8 @@
     <h4>Search Tips</h4>
     <ul>
       <li>Use at least 2 characters to search</li>
-      <li>Try searching by different criteria using the segments above</li>
-      <li>Account numbers are case-sensitive</li>
+      <li>Search is case-insensitive</li>
+      <li>Try partial matches if exact search doesn't work</li>
     </ul>
   </div>
 </ion-content>

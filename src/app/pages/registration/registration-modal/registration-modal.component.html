@@ -1,4 +1,4 @@
-<header>
+<ion-header>
   <ion-toolbar color="primary">
     <ion-title>Register New Consumer</ion-title>
     <ion-buttons slot="end">
@@ -7,13 +7,13 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-</header>
+</ion-header>
 
 <ion-content class="ion-padding">
   <form [formGroup]="registrationForm" (ngSubmit)="register()">
     <ion-list lines="full">
       <ion-item>
-        <ion-label position="floating">Account Number <ion-text color="danger">*</ion-text></ion-label>
+        <ion-label position="floating">Account Number <span style="color: red;">*</span></ion-label>
         <ion-input formControlName="accountNumber" type="text" placeholder="e.g., A100589"></ion-input>
       </ion-item>
       <div class="error-message" *ngIf="isFieldInvalid('accountNumber')">
@@ -21,7 +21,7 @@
       </div>
 
       <ion-item>
-        <ion-label position="floating">Consumer Name <ion-text color="danger">*</ion-text></ion-label>
+        <ion-label position="floating">Consumer Name <span style="color: red;">*</span></ion-label>
         <ion-input formControlName="consumerName" type="text" placeholder="e.g., John Smith"></ion-input>
       </ion-item>
       <div class="error-message" *ngIf="isFieldInvalid('consumerName')">
@@ -29,7 +29,7 @@
       </div>
 
       <ion-item>
-        <ion-label position="floating">Address <ion-text color="danger">*</ion-text></ion-label>
+        <ion-label position="floating">Address <span style="color: red;">*</span></ion-label>
         <ion-textarea formControlName="consumerAddress" rows="3" placeholder="e.g., 123 Main St, Anytown"></ion-textarea>
       </ion-item>
       <div class="error-message" *ngIf="isFieldInvalid('consumerAddress')">
@@ -37,7 +37,7 @@
       </div>
 
       <ion-item>
-        <ion-label position="floating">Meter Number <ion-text color="danger">*</ion-text></ion-label>
+        <ion-label position="floating">Meter Number <span style="color: red;">*</span></ion-label>
         <ion-input formControlName="meterNumber" type="text" placeholder="e.g., M52871"></ion-input>
       </ion-item>
       <div class="error-message" *ngIf="isFieldInvalid('meterNumber')">

@@ -1,21 +1,20 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ModalController } from '@ionic/angular';
 import { environment } from 'src/environments/environment';
 import { FormControl } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { IonHeader, IonLabel } from "@ionic/angular/standalone";
 
 @Component({
-  standalone:false,
+  standalone: false, // Changed from true to false
   selector: 'app-search-modal',
   templateUrl: './search-modal.component.html',
   styleUrls: ['./search-modal.component.scss'],
-
 })
 export class SearchModalComponent implements OnInit {
+  @Input() searchType: string = 'accountNumber';
+  
   searchTerm = new FormControl('');
-  searchType: string = 'accountNumber';
   consumers: any[] = [];
   isLoading: boolean = false;
 
@@ -54,8 +53,7 @@ export class SearchModalComponent implements OnInit {
 
     this.isLoading = true;
 
-    // Construct the URL with query parameters
-    let apiUrl = `${environment.apiUrl}/registration/searchAccountMaster?field=${this.searchType}&term=${term}`;
+    const apiUrl = `${environment.apiUrl}/registration/searchAccountMaster?field=${this.searchType}&term=${term}`;
 
     this.http.get(apiUrl).subscribe({
       next: (data) => {
@@ -77,5 +75,27 @@ export class SearchModalComponent implements OnInit {
   clearSearch() {
     this.searchTerm.setValue('');
     this.consumers = [];
+  }
+
+  getSearchPlaceholder(): string {
+    switch (this.searchType) {
+      case 'accountNumber':
+        return 'Enter account number...';
+      case 'consumerName':
+        return 'Enter consumer name...';
+      default:
+        return 'Enter search term...';
+    }
+  }
+
+  getModalTitle(): string {
+    switch (this.searchType) {
+      case 'accountNumber':
+        return 'Search by Account Number';
+      case 'consumerName':
+        return 'Search by Consumer Name';
+      default:
+        return 'Search Consumers';
+    }
   }
 }
