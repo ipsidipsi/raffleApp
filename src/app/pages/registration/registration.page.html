@@ -32,6 +32,7 @@
               formControlName="accountNumber"
               placeholder="Enter 10 digit account number"
               readonly="true"
+
             ></ion-input>
             <button type="button" class="search-button" (click)="openSearchModal('accountNumber')">
               Search
@@ -66,9 +67,9 @@
           ></ion-input>
         </div>
 
-        <button 
-          type="submit" 
-          class="register-btn" 
+        <button
+          type="submit"
+          class="register-btn"
           [disabled]="registrationForm.invalid"
         >
           Register
@@ -96,13 +97,13 @@
 
       <!-- Registrants Cards -->
       <div class="registrants-container">
-        <div 
-          class="account-card" 
+        <div
+          class="account-card"
           *ngFor="let registrant of filteredRegistrants; trackBy: trackByRegistrant"
         >
-          <button 
-            class="delete-btn" 
-            (click)="deleteRegistrant(registrant.id)"
+          <button
+            class="delete-btn"
+            (click)="deleteRegistrant(registrant.accountNumber)"
           >
             Delete
           </button>

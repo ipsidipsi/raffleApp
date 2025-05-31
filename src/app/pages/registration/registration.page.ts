@@ -28,7 +28,7 @@ export class RegistrationPage implements OnInit {
     private alertController: AlertController
   ) {
     this.registrationForm = this.fb.group({
-      stubNumber: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
+      stubNumber: ['', [Validators.required, Validators.pattern(/^\d$/)]],
       accountNumber: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       consumerName: ['', Validators.required],
       consumerAddress: ['', Validators.required],
@@ -124,7 +124,7 @@ export class RegistrationPage implements OnInit {
 
   async loadRegisteredConsumers() {
     this.isLoading = true;
-    
+
     this.http.get(`${environment.apiUrl}/registration/all`).subscribe({
       next: (data) => {
         this.registeredConsumers = data as any[];
@@ -164,7 +164,7 @@ export class RegistrationPage implements OnInit {
     return registrant.id || index;
   }
 
-  async deleteRegistrant(id: number) {
+  async deleteRegistrant(accountNumber: string) {
     const alert = await this.alertController.create({
       header: 'Confirm Delete',
       message: 'Are you sure you want to delete this registrant?',
@@ -176,7 +176,7 @@ export class RegistrationPage implements OnInit {
         {
           text: 'Delete',
           handler: () => {
-            this.performDelete(id);
+            this.performDelete(accountNumber);
           }
         }
       ]
@@ -184,18 +184,19 @@ export class RegistrationPage implements OnInit {
     await alert.present();
   }
 
-  performDelete(id: number) {
-    this.http.delete(`${environment.apiUrl}/registration/${id}`).subscribe({
-      next: () => {
-        this.presentToast('Registrant deleted successfully', 'success');
-        this.loadRegisteredConsumers();
-      },
-      error: (err) => {
-        console.error('Delete failed', err);
-        this.presentToast('Failed to delete registrant', 'danger');
-      }
-    });
-  }
+  performDelete(accountNumber: string) {
+  this.http.delete(`${environment.apiUrl}/registration/${accountNumber}`, { responseType: 'text' }).subscribe({
+    next: (response) => {
+      console.log('Delete response:', response); // Will show the text message
+      this.presentToast('Registrant deleted successfully', 'success');
+      this.loadRegisteredConsumers();
+    },
+    error: (err) => {
+      console.error('Delete failed', err);
+      this.presentToast('Failed to delete registrant', 'danger');
+    }
+  });
+}
 
   async presentToast(message: string, color: string = 'success') {
     const toast = await this.toastController.create({
