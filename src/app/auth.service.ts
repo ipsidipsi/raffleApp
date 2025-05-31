@@ -4,15 +4,6 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Router } from '@angular/router';
-import { jwtDecode } from 'jwt-decode';
-
-interface JwtPayload {
-  username: string;
-  role?: string;
-  sub?: string;
-  iat?: number;
-  exp?: number;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -22,65 +13,38 @@ export class AuthService {
   public currentUser: Observable<any>;
   private apiUrl: string;
 
-  // Add in-memory storage as backup
-  private memoryUser: any = null;
-
   constructor(private http: HttpClient, private router: Router) {
-    console.log('AuthService constructor called');
-
-    // Initialize with safe parsing
-    const initialUser = this.getSafeUserFromStorage();
-    this.currentUserSubject = new BehaviorSubject(initialUser);
+    this.currentUserSubject = new BehaviorSubject(this.getStoredUser());
     this.currentUser = this.currentUserSubject.asObservable();
-
     this.apiUrl = environment.apiUrl;
+
+    // Make sure apiUrl has the protocol, adding it if missing
     if (this.apiUrl && !this.apiUrl.startsWith('http://') && !this.apiUrl.startsWith('https://')) {
       this.apiUrl = 'http://' + this.apiUrl;
     }
-
-    console.log('AuthService - Initial user:', initialUser);
-    console.log('AuthService - API URL configured as:', this.apiUrl);
   }
 
-  private getSafeUserFromStorage(): any {
+  private getStoredUser(): any {
     try {
-      const storedUser = localStorage.getItem('user');
-      console.log('getSafeUserFromStorage - raw storedUser:', storedUser);
-
-      if (!storedUser || storedUser === 'undefined' || storedUser === 'null') {
-        console.log('getSafeUserFromStorage - No valid user data, clearing localStorage');
-        localStorage.removeItem('user');
-        this.memoryUser = null;
-        return null;
-      }
-
-      const parsedUser = JSON.parse(storedUser);
-      console.log('getSafeUserFromStorage - Successfully parsed user:', parsedUser);
-      this.memoryUser = parsedUser; // Store in memory as backup
-      return parsedUser;
+      const userJson = localStorage.getItem('user');
+      return userJson ? JSON.parse(userJson) : null;
     } catch (error) {
-      console.error('getSafeUserFromStorage - Error parsing stored user data:', error);
-      localStorage.removeItem('user');
-      this.memoryUser = null;
+      console.error('Error parsing stored user data:', error);
       return null;
     }
   }
 
-  private setUserData(user: any): void {
-    console.log('setUserData - Setting user:', user);
+  // Check if user is authenticated
+  isAuthenticated(): boolean {
+    const token = localStorage.getItem('access_token');
+    const user = this.getStoredUser();
 
-    // Store in localStorage
-    localStorage.setItem('user', JSON.stringify(user));
+    console.log('isAuthenticated - Token exists:', !!token);
+    console.log('isAuthenticated - User exists:', !!user);
+    console.log('isAuthenticated - User data:', user);
 
-    // Store in memory as backup
-    this.memoryUser = user;
-
-    // Update BehaviorSubject
-    this.currentUserSubject.next(user);
-
-    // Verify storage
-    const verification = localStorage.getItem('user');
-    console.log('setUserData - Verification stored data:', verification);
+    // Check if both token and user exist
+    return !!(token && user && user.id);
   }
 
   login(username: string, password: string) {
@@ -93,35 +57,31 @@ export class AuthService {
 
     console.log('Attempting login to:', loginUrl);
 
-    return this.http.post<any>(loginUrl, { username, password }, httpOptions).pipe(
+    return this.http.post<any>(
+      loginUrl,
+      { username, password },
+      httpOptions
+    ).pipe(
       map(response => {
         console.log('Login response:', response);
 
-        try {
-          const decodedToken: JwtPayload = jwtDecode(response.access_token);
-          console.log('Decoded token:', decodedToken);
+        // Store token separately
+        localStorage.setItem('access_token', response.access_token);
 
-          const user = {
-            username: decodedToken.username || username,
-            role: decodedToken.role || 'user',
-            access_token: response.access_token,
-            id: decodedToken.sub
-          };
+        // Store user data (without token in user object)
+        const userData = {
+          id: response.user.id,
+          username: response.user.username,
+          role: response.user.role
+        };
 
-          this.setUserData(user);
-          return response;
-        } catch (error) {
-          console.error('Error decoding JWT token:', error);
+        localStorage.setItem('user', JSON.stringify(userData));
+        console.log('Stored user data:', userData);
 
-          const user = {
-            username: username,
-            access_token: response.access_token,
-            role: 'user'
-          };
+        // Update the current user subject
+        this.currentUserSubject.next(userData);
 
-          this.setUserData(user);
-          return response;
-        }
+        return response;
       }),
       catchError(error => {
         console.error('Login error:', error);
@@ -131,74 +91,33 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.clear();
-    this.memoryUser = null;
+    console.log('Logging out...');
+
+    // Clear all stored data
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+
+    // Update current user subject
     this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
   }
 
   getUserRole(): string | null {
-    // Try memory first, then localStorage
-    let user = this.memoryUser;
-
-    if (!user) {
-      const userJson = localStorage.getItem('user');
-      console.log('getUserRole - localStorage data:', userJson);
-
-      if (!userJson || userJson === 'undefined' || userJson === 'null') {
-        console.log('getUserRole - No valid user data found');
-        return null;
-      }
-
-      try {
-        user = JSON.parse(userJson);
-        this.memoryUser = user; // Cache in memory
-      } catch (error) {
-        console.error('getUserRole - Error parsing user data:', error);
-        localStorage.removeItem('user');
-        return null;
-      }
-    }
-
-    console.log('getUserRole - Using user data:', user);
-    return user?.role || null;
-  }
-
-  getAccessToken(): string | null {
-    // Try memory first, then localStorage
-    let user = this.memoryUser;
-
-    if (!user) {
-      const userJson = localStorage.getItem('user');
-      console.log('getAccessToken - localStorage data:', userJson);
-
-      if (!userJson || userJson === 'undefined' || userJson === 'null') {
-        console.log('getAccessToken - No valid user data found');
-        return null;
-      }
-
-      try {
-        user = JSON.parse(userJson);
-        this.memoryUser = user; // Cache in memory
-      } catch (error) {
-        console.error('getAccessToken - Error parsing user data:', error);
-        localStorage.removeItem('user');
-        return null;
-      }
-    }
-
-    const token = user?.access_token || null;
-    console.log('getAccessToken - token present:', token !== null);
-    return token;
-  }
-
-  isLoggedIn(): boolean {
-    const token = this.getAccessToken();
-    console.log('isLoggedIn check - token present:', token !== null);
-    return token !== null;
+    const user = this.getStoredUser();
+    console.log('getUserRole - User data:', user);
+    return user ? user.role : null;
   }
 
   getCurrentUser(): any {
-    return this.memoryUser || this.getSafeUserFromStorage();
+    return this.getStoredUser();
+  }
+
+  // Get the stored token for API calls
+  getToken(): string | null {
+    return localStorage.getItem('access_token');
+  }
+
+  // Additional helper method to check if token exists
+  hasToken(): boolean {
+    return !!this.getToken();
   }
 }

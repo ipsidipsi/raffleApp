@@ -13,8 +13,8 @@
   <div class="search-container">
     <ion-item class="search-box">
       <ion-icon name="search-outline" slot="start" color="medium"></ion-icon>
-      <ion-input 
-        [formControl]="searchTerm" 
+      <ion-input
+        [formControl]="searchTerm"
         [placeholder]="getSearchPlaceholder()"
       ></ion-input>
       <ion-button fill="clear" *ngIf="searchTerm.value" (click)="clearSearch()">
@@ -54,12 +54,12 @@
     </ion-list>
   </div>
 
-  <div class="search-tips" *ngIf="consumers.length === 0 && !isLoading">
+  <!-- <div class="search-tips" *ngIf="consumers.length === 0 && !isLoading">
     <h4>Search Tips</h4>
     <ul>
       <li>Use at least 2 characters to search</li>
       <li>Search is case-insensitive</li>
       <li>Try partial matches if exact search doesn't work</li>
     </ul>
-  </div>
+  </div> -->
 </ion-content>
