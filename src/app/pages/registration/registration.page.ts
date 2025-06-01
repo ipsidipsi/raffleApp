@@ -4,6 +4,9 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { LoadingController, ModalController, ToastController, AlertController } from '@ionic/angular';
 import { SearchModalComponent } from './search-modal/search-modal.component';
+//import * as Swal from 'sweetalert2';
+//import Swal from 'sweetalert2';
+import { SweetalertService } from 'src/app/services/sweetalert.service';
 
 @Component({
    standalone:false,
@@ -25,10 +28,11 @@ export class RegistrationPage implements OnInit {
     private toastController: ToastController,
     private modalController: ModalController,
     private loadingController: LoadingController,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private sweetAlert: SweetalertService,
   ) {
     this.registrationForm = this.fb.group({
-      stubNumber: ['', [Validators.required, Validators.pattern(/^\d$/)]],
+      stubNumber: ['', [Validators.required, Validators.pattern(/^\d{1,5}$/)]],
       accountNumber: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       consumerName: ['', Validators.required],
       consumerAddress: ['', Validators.required],
@@ -40,10 +44,25 @@ export class RegistrationPage implements OnInit {
     this.loadRegisteredConsumers();
   }
 
-  onStubNumberInput(event: any) {
-    let value = event.target.value.replace(/[^0-9]/g, '').slice(0, 5);
-    this.registrationForm.patchValue({ stubNumber: value });
-  }
+ onStubNumberInput(event: any) {
+  // Remove non-numeric characters and limit to 5 digits
+  let value = event.target.value.replace(/[^0-9]/g, '').slice(0, 5);
+
+  // Store the raw numeric value (001 = 1)
+  this.registrationForm.patchValue({ stubNumber: value });
+
+  // Update the display to show the entered value
+  event.target.value = value;
+}
+
+getFormattedStubNumber(): string {
+  const stubValue = this.registrationForm.get('stubNumber')?.value;
+  if (!stubValue) return '';
+
+  // Convert to number to remove leading zeros, then back to string
+  const numericValue = parseInt(stubValue, 10);
+  return numericValue.toString();
+}
 
   onAccountNumberInput(event: any) {
     let value = event.target.value.replace(/[^0-9]/g, '').slice(0, 10);
@@ -76,39 +95,101 @@ export class RegistrationPage implements OnInit {
     });
   }
 
-  async register() {
-    if (this.registrationForm.invalid) {
-      await this.presentToast('Please fill in all required fields', 'danger');
-      return;
-    }
-
-    const loading = await this.loadingController.create({
-      message: 'Processing registration...',
-      spinner: 'circles'
-    });
-
-    await loading.present();
-
-    const registrationData = {
-      accountNumber: this.registrationForm.value.accountNumber,
-      stubNumber: this.registrationForm.value.stubNumber
-    };
-
-    this.http.post(`${environment.apiUrl}/registration/`, registrationData).subscribe({
-      next: async (response) => {
-        loading.dismiss();
-        await this.presentSuccessAlert();
-        this.clearForm();
-        this.loadRegisteredConsumers();
-      },
-      error: async (err) => {
-        loading.dismiss();
-        console.error('Registration failed', err);
-        await this.presentToast('Registration failed. Please try again.', 'danger');
-      }
-    });
+async register() {
+  if (this.registrationForm.invalid) {
+    this.sweetAlert.showWarning(
+      'Invalid Form',
+      'Please fill in all required fields correctly.'
+    );
+    return;
   }
 
+  // Show loading
+  this.sweetAlert.showLoading(
+    'Processing Registration...',
+    'Please wait while we register the account.'
+  );
+
+  const registrationData = {
+    accountNumber: this.registrationForm.value.accountNumber,
+    stubNumber: this.getFormattedStubNumber(),
+  };
+
+  this.http.post(`${environment.apiUrl}/registration/`, registrationData).subscribe({
+    next: async (response) => {
+      this.sweetAlert.showSuccess(
+        'Registration Successful!',
+        `Account ${registrationData.accountNumber} has been registered successfully.`
+      );
+      this.clearForm();
+      this.loadRegisteredConsumers();
+    },
+    error: async (err) => {
+      console.error('Registration failed', err);
+      this.handleRegistrationError(err);
+    }
+  });
+}
+handleRegistrationError(error: any) {
+  let title = 'Registration Failed';
+  let message = 'An unexpected error occurred. Please try again.';
+
+  // Check the error response for specific error messages
+  if (error.error) {
+    const errorMessage = error.error.message || error.error;
+    const lowerErrorMessage = errorMessage.toLowerCase();
+
+    // Handle specific error cases with better pattern matching
+    if (lowerErrorMessage.includes('duplicate account') ||
+        (lowerErrorMessage.includes('account') && (lowerErrorMessage.includes('duplicate') || lowerErrorMessage.includes('already exists') || lowerErrorMessage.includes('exist')))) {
+      title = 'Duplicate Account Number';
+      message = `Account number ${this.registrationForm.value.accountNumber} already exists. Please check your records.`;
+    }
+    else if (lowerErrorMessage.includes('duplicate stub') ||
+             (lowerErrorMessage.includes('stub') && (lowerErrorMessage.includes('duplicate') || lowerErrorMessage.includes('already exists') || lowerErrorMessage.includes('exist')))) {
+      title = 'Duplicate Stub Number';
+      message = `Stub number ${this.registrationForm.value.stubNumber} is already registered. Please use a different stub number.`;
+    }
+    else if (lowerErrorMessage.includes('not found') ||
+             lowerErrorMessage.includes('invalid account')) {
+      title = 'Invalid Account';
+      message = `Account number ${this.registrationForm.value.accountNumber} was not found in the system. Please verify the account number.`;
+    }
+    else if (lowerErrorMessage.includes('validation') ||
+             lowerErrorMessage.includes('invalid format')) {
+      title = 'Invalid Input Format';
+      message = 'Please check that your stub number is 5 digits and account number is 10 digits.';
+    }
+    else {
+      // If we have a specific error message but it doesn't match our patterns
+      message = errorMessage;
+    }
+  }
+
+  // Handle HTTP status codes
+  else if (error.status) {
+    switch (error.status) {
+      case 400:
+        title = 'Invalid Request';
+        message = 'The registration data provided is invalid. Please check your inputs.';
+        break;
+      case 409:
+        title = 'Registration Conflict';
+        message = 'This account or stub number is already registered.';
+        break;
+      case 500:
+        title = 'Server Error';
+        message = 'There was a server error. Please try again later.';
+        break;
+      default:
+        title = 'Connection Error';
+        message = 'Unable to connect to the server. Please check your internet connection.';
+    }
+  }
+
+  console.log('Error handling - Title:', title, 'Message:', message); // Debug log
+  this.sweetAlert.showError(title, message);
+}
   async presentSuccessAlert() {
     const alert = await this.alertController.create({
       header: 'Success',
@@ -122,22 +203,26 @@ export class RegistrationPage implements OnInit {
     this.registrationForm.reset();
   }
 
-  async loadRegisteredConsumers() {
-    this.isLoading = true;
+async loadRegisteredConsumers() {
+  this.isLoading = true;
 
-    this.http.get(`${environment.apiUrl}/registration/all`).subscribe({
-      next: (data) => {
-        this.registeredConsumers = data as any[];
-        this.filteredRegistrants = [...this.registeredConsumers];
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Failed to load registered consumers', err);
-        this.presentToast('Failed to load consumers', 'danger');
-        this.isLoading = false;
-      }
-    });
-  }
+  this.http.get(`${environment.apiUrl}/registration/all`).subscribe({
+    next: (data) => {
+      this.registeredConsumers = data as any[];
+      this.filteredRegistrants = [...this.registeredConsumers];
+      this.isLoading = false;
+    },
+    error: (err) => {
+      console.error('Failed to load registered consumers', err);
+      this.isLoading = false;
+      this.sweetAlert.showError(
+    'Loading Failed',
+    'Unable to load registered consumers. Please refresh the page.'
+  );
+
+    }
+  });
+}
 
   filterRegistrants() {
     if (!this.searchFilter.trim()) {
@@ -164,40 +249,34 @@ export class RegistrationPage implements OnInit {
     return registrant.id || index;
   }
 
-  async deleteRegistrant(accountNumber: string) {
-    const alert = await this.alertController.create({
-      header: 'Confirm Delete',
-      message: 'Are you sure you want to delete this registrant?',
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: 'Delete',
-          handler: () => {
-            this.performDelete(accountNumber);
-          }
-        }
-      ]
-    });
-    await alert.present();
-  }
+async deleteRegistrant(accountNumber: string) {
+  const result = await this.sweetAlert.showConfirmation(
+    'Delete Registrant',
+    `Are you sure you want to delete account ${accountNumber}?`
+  );
 
-  performDelete(accountNumber: string) {
+  if (result.isConfirmed) {
+    this.performDelete(accountNumber);
+  }
+}
+performDelete(accountNumber: string) {
   this.http.delete(`${environment.apiUrl}/registration/${accountNumber}`, { responseType: 'text' }).subscribe({
     next: (response) => {
-      console.log('Delete response:', response); // Will show the text message
-      this.presentToast('Registrant deleted successfully', 'success');
+      this.sweetAlert.showSuccess(
+        'Deleted!',
+        'Registrant has been deleted successfully.'
+      );
       this.loadRegisteredConsumers();
     },
     error: (err) => {
       console.error('Delete failed', err);
-      this.presentToast('Failed to delete registrant', 'danger');
+      this.sweetAlert.showError(
+        'Delete Failed',
+        'Unable to delete registrant. Please try again.'
+      );
     }
   });
 }
-
   async presentToast(message: string, color: string = 'success') {
     const toast = await this.toastController.create({
       message,

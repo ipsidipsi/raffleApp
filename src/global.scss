@@ -35,3 +35,62 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
+
+/* SweetAlert2 fixes for Ionic */
+.swal2-container {
+  z-index: 99999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+.swal2-popup {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: auto !important;
+  max-width: 500px !important;
+  min-width: 300px !important;
+  max-height: 90vh !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+.swal2-content {
+  max-height: none !important;
+  overflow: visible !important;
+  margin: 1em 0 !important;
+}
+
+.swal2-html-container {
+  max-height: none !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.swal2-actions {
+  margin-top: 20px !important;
+  justify-content: space-around !important;
+  gap: 10px !important;
+}
+
+.swal2-confirm, .swal2-cancel {
+  min-width: 80px !important;
+  padding: 10px 20px !important;
+  margin: 0 5px !important;
+}
+
+/* Fix for mobile devices */
+@media (max-width: 768px) {
+  .swal2-popup {
+    width: 90% !important;
+    max-width: 90% !important;
+    min-width: 280px !important;
+  }
+}
