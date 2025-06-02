@@ -1,0 +1,144 @@
+<div class="raffle-report">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner name="circles"></ion-spinner>
+    <p>Loading raffle data...</p>
+  </div>
+
+  <!-- Report Content -->
+  <div *ngIf="!isLoading && reportData">
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <ion-card class="summary-card">
+        <ion-card-content>
+          <div class="summary-number">{{ reportData.summary.totalDraws }}</div>
+          <div class="summary-label">Total Draws</div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="summary-card">
+        <ion-card-content>
+          <div class="summary-number">{{ reportData.summary.totalWinners }}</div>
+          <div class="summary-label">Total Winners</div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="summary-card valid">
+        <ion-card-content>
+          <div class="summary-number">{{ reportData.summary.validWinners }}</div>
+          <div class="summary-label">Valid Winners</div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="summary-card pending">
+        <ion-card-content>
+          <div class="summary-number">{{ reportData.summary.pendingWinners }}</div>
+          <div class="summary-label">Pending</div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Export Button -->
+    <div class="export-section">
+      <ion-button (click)="showExportOptions()" color="primary" fill="outline">
+        <ion-icon name="download-outline" slot="start"></ion-icon>
+        Export Report
+      </ion-button>
+    </div>
+
+    <!-- Raffle Draws List -->
+    <div class="draws-section">
+      <h3>Raffle Draws</h3>
+
+      <div *ngIf="reportData.raffleDraws.length === 0" class="no-data">
+        <ion-card>
+          <ion-card-content class="ion-text-center">
+            <ion-icon name="trophy-outline" size="large" color="medium"></ion-icon>
+            <h4>No Raffle Draws Yet</h4>
+            <p>Raffle draws will appear here once they are conducted.</p>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <div *ngFor="let draw of reportData.raffleDraws" class="draw-card">
+        <ion-card>
+          <!-- Draw Header -->
+          <ion-card-header (click)="toggleDrawExpansion(draw.id)" class="clickable-header">
+            <div class="draw-header-content">
+              <div class="draw-main-info">
+                <ion-card-title>{{ draw.prizeName }}</ion-card-title>
+                <ion-card-subtitle>{{ draw.drawNumber }} • {{ draw.drawDate | date:'short' }}</ion-card-subtitle>
+              </div>
+              <div class="draw-stats">
+                <ion-badge color="primary">{{ draw.totalWinners }}/{{ draw.numberOfWinners }} Winners</ion-badge>
+                <ion-icon
+                  [name]="isDrawExpanded(draw.id) ? 'chevron-up' : 'chevron-down'"
+                  color="medium">
+                </ion-icon>
+              </div>
+            </div>
+          </ion-card-header>
+
+          <!-- Expandable Content -->
+          <ion-card-content *ngIf="isDrawExpanded(draw.id)" class="draw-details">
+            <div class="draw-meta">
+              <div class="meta-item">
+                <strong>Created by:</strong> {{ draw.createdBy || 'N/A' }}
+              </div>
+              <div class="meta-item" *ngIf="draw.filterCriteria">
+                <strong>Filter:</strong> {{ draw.filterCriteria }}
+              </div>
+              <div class="meta-item">
+                <strong>Status:</strong>
+                <ion-badge [color]="getStatusColor(draw.status)">{{ draw.status }}</ion-badge>
+              </div>
+            </div>
+
+            <!-- Winners List -->
+            <div class="winners-section" *ngIf="draw.winners.length > 0">
+              <h4>Winners</h4>
+              <div class="winners-list">
+                <ion-item *ngFor="let winner of draw.winners" class="winner-item">
+                  <ion-avatar slot="start">
+                    <div class="winner-avatar">
+                      {{ winner.consumerName.charAt(0) }}
+                    </div>
+                  </ion-avatar>
+
+                  <ion-label>
+                    <h3>{{ winner.consumerName }}</h3>
+                    <p>{{ winner.accountNumber }} • {{ winner.areaName }}</p>
+                    <p class="winner-address">{{ winner.consumerAddress }}</p>
+                  </ion-label>
+
+                  <ion-badge
+                    slot="end"
+                    [color]="getStatusColor(winner.status)">
+                    {{ winner.status }}
+                  </ion-badge>
+                </ion-item>
+              </div>
+            </div>
+
+            <div *ngIf="draw.winners.length === 0" class="no-winners">
+              <p>No winners recorded for this draw.</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <ion-card *ngIf="!isLoading && !reportData" class="error-card">
+    <ion-card-content class="ion-text-center">
+      <ion-icon name="alert-circle-outline" size="large" color="danger"></ion-icon>
+      <h3>Unable to Load Data</h3>
+      <p>There was an error loading the raffle report.</p>
+      <ion-button (click)="loadRaffleReport()" color="primary">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Try Again
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+</div>

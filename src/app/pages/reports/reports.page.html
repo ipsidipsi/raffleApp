@@ -1,13 +1,39 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>reports</ion-title>
+// src/app/pages/reports/reports.page.html
+<!-- Updated reports.page.html -->
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Reports</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">reports</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+  <!-- Segment Control -->
+  <ion-segment [(ngModel)]="selectedSegment" (ionChange)="onSegmentChange($event)">
+    <ion-segment-button value="registrants">
+      <ion-label>Registrants</ion-label>
+      <ion-icon name="people-outline"></ion-icon>
+    </ion-segment-button>
+    <ion-segment-button value="raffle" [disabled]="!isAdmin">
+      <ion-label>Raffle</ion-label>
+      <ion-icon name="trophy-outline"></ion-icon>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- Registrant Report Component -->
+  <app-registrant-report *ngIf="selectedSegment === 'registrants'"></app-registrant-report>
+
+  <!-- Raffle Report Component (Admin Only) -->
+  <app-raffle-report *ngIf="selectedSegment === 'raffle' && isAdmin"></app-raffle-report>
+
+  <!-- Access Denied Message for Non-Admin -->
+  <ion-card *ngIf="selectedSegment === 'raffle' && !isAdmin">
+    <ion-card-content class="ion-text-center">
+      <ion-icon name="lock-closed-outline" size="large" color="medium"></ion-icon>
+      <h3>Access Restricted</h3>
+      <p>Raffle reports are only available to administrators.</p>
+    </ion-card-content>
+  </ion-card>
 </ion-content>

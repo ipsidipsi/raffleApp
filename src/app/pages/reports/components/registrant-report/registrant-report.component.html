@@ -1,0 +1,55 @@
+<div class="registrant-report">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <ion-spinner name="circles"></ion-spinner>
+    <p>Loading registrant data...</p>
+  </div>
+
+  <!-- Report Content -->
+  <div *ngIf="!isLoading && reportData">
+    <!-- Header with Total Count -->
+    <ion-card class="total-card">
+      <ion-card-content class="ion-text-center">
+        <div class="total-number">{{ reportData.totalRegistrants }}</div>
+        <div class="total-label">Total Registered Consumers</div>
+        <div class="last-update">
+          Last updated: {{ lastRefresh | date:'short' }}
+          <ion-button fill="clear" size="small" (click)="refreshReport()">
+            <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Area Breakdown Grid (3x5) -->
+    <ion-card class="area-grid-card">
+      <ion-card-header>
+        <ion-card-title>Registrants by Area</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="area-grid">
+          <div *ngFor="let row of getAreaGrid()" class="grid-row">
+            <div *ngFor="let area of row" class="grid-cell">
+              <div class="area-code">{{ area.areaCode }}</div>
+              <div class="area-name">{{ area.areaName }}</div>
+              <div class="area-count">{{ area.registrantCount }}</div>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Error State -->
+  <ion-card *ngIf="!isLoading && !reportData" class="error-card">
+    <ion-card-content class="ion-text-center">
+      <ion-icon name="alert-circle-outline" size="large" color="danger"></ion-icon>
+      <h3>Unable to Load Data</h3>
+      <p>There was an error loading the registrant report.</p>
+      <ion-button (click)="loadReport()" color="primary">
+        <ion-icon name="refresh-outline" slot="start"></ion-icon>
+        Try Again
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+</div>

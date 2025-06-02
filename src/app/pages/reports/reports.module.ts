@@ -7,6 +7,9 @@ import { IonicModule } from '@ionic/angular';
 import { ReportsPageRoutingModule } from './reports-routing.module';
 
 import { ReportsPage } from './reports.page';
+import { RegistrantReportComponent } from './components/registrant-report/registrant-report.component';
+import { RaffleReportComponent } from './components/raffle-report/raffle-report.component';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/compiler';
 
 @NgModule({
   imports: [
@@ -15,6 +18,7 @@ import { ReportsPage } from './reports.page';
     IonicModule,
     ReportsPageRoutingModule
   ],
-  declarations: [ReportsPage]
+  declarations: [ReportsPage,RegistrantReportComponent,RaffleReportComponent],
+
 })
 export class ReportsPageModule {}
