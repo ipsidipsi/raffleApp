@@ -53,39 +53,6 @@
   </ion-select>
 </ion-item>
 
-        <!-- Eligible Count Display -->
-        <div class="eligible-info" *ngIf="eligibleCount > 0">
-          <ion-chip color="primary">
-            <ion-icon name="people-outline"></ion-icon>
-            <ion-label>{{eligibleCount}} Eligible Registrants</ion-label>
-          </ion-chip>
-        </div>
-        <!-- DETAILED DEBUG INFO -->
-<div style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px;">
-  <p><strong>Form Debug:</strong></p>
-  <p>Form Valid: {{raffleForm.valid}}</p>
-  <p>Form Errors: {{raffleForm.errors | json}}</p>
-
-  <p><strong>Prize Name:</strong></p>
-  <p>Value: "{{raffleForm.get('prizeName')?.value}}"</p>
-  <p>Valid: {{raffleForm.get('prizeName')?.valid}}</p>
-  <p>Errors: {{raffleForm.get('prizeName')?.errors | json}}</p>
-
-  <p><strong>Number of Winners:</strong></p>
-  <p>Value: {{raffleForm.get('numberOfWinners')?.value}}</p>
-  <p>Valid: {{raffleForm.get('numberOfWinners')?.valid}}</p>
-  <p>Errors: {{raffleForm.get('numberOfWinners')?.errors | json}}</p>
-
-  <p><strong>Selected Areas:</strong></p>
-  <p>Value: {{raffleForm.get('selectedAreas')?.value | json}}</p>
-  <p>Valid: {{raffleForm.get('selectedAreas')?.valid}}</p>
-  <p>Errors: {{raffleForm.get('selectedAreas')?.errors | json}}</p>
-
-  <p><strong>Other Conditions:</strong></p>
-  <p>Is Drawing: {{isDrawing}}</p>
-  <p>Eligible Count: {{eligibleCount}}</p>
-  <p>Selected Areas Array: {{selectedAreas | json}}</p>
-</div>
         <!-- Draw Button -->
         <div class="draw-button-container">
           <ion-button
@@ -192,15 +159,7 @@
         </ion-item>
       </div>
       <div style="background: #f0f0f0; padding: 10px; margin: 10px 0;">
-  <p><strong>Debug Info:</strong></p>
-  <p>Form Valid: {{raffleForm.valid}}</p>
-  <p>Form Invalid: {{raffleForm.invalid}}</p>
-  <p>Is Drawing: {{isDrawing}}</p>
-  <p>Eligible Count: {{eligibleCount}}</p>
-  <p>Selected Areas: {{selectedAreas | json}}</p>
-  <p>Prize Name: {{raffleForm.get('prizeName')?.value}}</p>
-  <p>Number of Winners: {{raffleForm.get('numberOfWinners')?.value}}</p>
-  <p>Selected Areas Form: {{raffleForm.get('selectedAreas')?.value | json}}</p>
+
 </div>
       <!-- New Draw Button -->
       <div class="new-draw-container">
