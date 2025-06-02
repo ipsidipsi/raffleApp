@@ -1,13 +1,220 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>raffle</ion-title>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Raffle Draw System</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">raffle</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <!-- Draw Setup Section -->
+  <ion-card *ngIf="winners.length === 0">
+    <ion-card-header>
+      <ion-card-title>Setup New Draw</ion-card-title>
+      <ion-card-subtitle>Configure your raffle parameters</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <form [formGroup]="raffleForm" (ngSubmit)="executeDraw()">
+
+     <!-- Prize Name - Remove [disabled] attribute -->
+<ion-item>
+  <ion-label position="floating">Prize Name *</ion-label>
+  <ion-input
+    formControlName="prizeName"
+    placeholder="e.g., Electric Fan, Rice Cooker">
+  </ion-input>
+</ion-item>
+
+        <!-- Number of Winners - Remove [disabled] attribute -->
+<ion-item>
+  <ion-label position="floating">Number of Winners *</ion-label>
+  <ion-input
+    type="number"
+    formControlName="numberOfWinners"
+    min="1"
+    max="100">
+  </ion-input>
+</ion-item>
+       <!-- Area Selection - Remove [disabled] attribute -->
+<<ion-item>
+  <ion-label position="floating">Select Areas *</ion-label>
+  <ion-select
+    multiple="true"
+    formControlName="selectedAreas"
+    placeholder="Choose areas to include in draw">
+    <ion-select-option
+      *ngFor="let area of availableAreas"
+      [value]="area.AreaCode">
+      {{area.AreaName}} ({{area.EligibleRegistrants}} eligible)
+    </ion-select-option>
+  </ion-select>
+</ion-item>
+
+        <!-- Eligible Count Display -->
+        <div class="eligible-info" *ngIf="eligibleCount > 0">
+          <ion-chip color="primary">
+            <ion-icon name="people-outline"></ion-icon>
+            <ion-label>{{eligibleCount}} Eligible Registrants</ion-label>
+          </ion-chip>
+        </div>
+        <!-- DETAILED DEBUG INFO -->
+<div style="background: #f0f0f0; padding: 10px; margin: 10px 0; font-size: 12px;">
+  <p><strong>Form Debug:</strong></p>
+  <p>Form Valid: {{raffleForm.valid}}</p>
+  <p>Form Errors: {{raffleForm.errors | json}}</p>
+
+  <p><strong>Prize Name:</strong></p>
+  <p>Value: "{{raffleForm.get('prizeName')?.value}}"</p>
+  <p>Valid: {{raffleForm.get('prizeName')?.valid}}</p>
+  <p>Errors: {{raffleForm.get('prizeName')?.errors | json}}</p>
+
+  <p><strong>Number of Winners:</strong></p>
+  <p>Value: {{raffleForm.get('numberOfWinners')?.value}}</p>
+  <p>Valid: {{raffleForm.get('numberOfWinners')?.valid}}</p>
+  <p>Errors: {{raffleForm.get('numberOfWinners')?.errors | json}}</p>
+
+  <p><strong>Selected Areas:</strong></p>
+  <p>Value: {{raffleForm.get('selectedAreas')?.value | json}}</p>
+  <p>Valid: {{raffleForm.get('selectedAreas')?.valid}}</p>
+  <p>Errors: {{raffleForm.get('selectedAreas')?.errors | json}}</p>
+
+  <p><strong>Other Conditions:</strong></p>
+  <p>Is Drawing: {{isDrawing}}</p>
+  <p>Eligible Count: {{eligibleCount}}</p>
+  <p>Selected Areas Array: {{selectedAreas | json}}</p>
+</div>
+        <!-- Draw Button -->
+        <div class="draw-button-container">
+          <ion-button
+            expand="block"
+            type="submit"
+            [disabled]="raffleForm.invalid || isDrawing || eligibleCount === 0"
+            color="success"
+            size="large">
+            <ion-icon name="gift-outline" slot="start"></ion-icon>
+            {{ isDrawing ? 'Drawing...' : 'Execute Draw' }}
+          </ion-button>
+        </div>
+
+      </form>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Drawing Animation -->
+  <ion-card *ngIf="drawingAnimation" class="drawing-animation">
+    <ion-card-content class="ion-text-center">
+      <h2>🎰 Drawing Winners...</h2>
+      <div class="animation-container">
+        <div *ngFor="let number of animationNumbers" class="rolling-number">
+          {{number}}
+        </div>
+      </div>
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Please wait while we select the lucky winners!</p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Winners Display -->
+  <ion-card *ngIf="winners.length > 0 && !drawingAnimation">
+    <ion-card-header>
+      <ion-card-title>
+        🎉 Winners Selected!
+        <ion-chip color="success">
+          <ion-label>{{winners.length}} Winners</ion-label>
+        </ion-chip>
+      </ion-card-title>
+      <ion-card-subtitle>Prize: {{winners[0].prizeWon}}</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+
+      <!-- Bulk Actions -->
+      <div class="bulk-actions">
+        <ion-button
+          fill="outline"
+          color="success"
+          (click)="bulkConfirm('valid_winner')"
+          [disabled]="!hasPendingWinners()">
+          <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+          Confirm All
+        </ion-button>
+
+        <ion-button
+          fill="outline"
+          color="danger"
+          (click)="bulkConfirm('invalid_winner')"
+          [disabled]="!hasPendingWinners()">
+          <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+          Disqualify All
+        </ion-button>
+      </div>
+
+      <!-- Winners List -->
+      <div class="winners-list">
+        <ion-item *ngFor="let winner of winners; let i = index" class="winner-item">
+          <ion-avatar slot="start">
+            <div class="winner-number">{{i + 1}}</div>
+          </ion-avatar>
+
+          <ion-label>
+            <h2>{{winner.consumerName}}</h2>
+            <p>Account: {{winner.accountNumber}}</p>
+            <p>Area: {{winner.AreaName}}</p>
+            <p>Address: {{winner.consumerAddress}}</p>
+          </ion-label>
+
+          <div slot="end" class="winner-actions">
+            <ion-chip [color]="getStatusColor(winner.status)">
+              <ion-label>{{getStatusText(winner.status)}}</ion-label>
+            </ion-chip>
+
+            <div class="action-buttons" *ngIf="isPendingValidation(winner.status)">
+              <ion-button
+                size="small"
+                fill="clear"
+                color="success"
+                (click)="confirmWinner(winner, 'valid_winner')">
+                <ion-icon name="checkmark-circle-outline"></ion-icon>
+              </ion-button>
+
+              <ion-button
+                size="small"
+                fill="clear"
+                color="danger"
+                (click)="confirmWinner(winner, 'invalid_winner')">
+                <ion-icon name="close-circle-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </ion-item>
+      </div>
+      <div style="background: #f0f0f0; padding: 10px; margin: 10px 0;">
+  <p><strong>Debug Info:</strong></p>
+  <p>Form Valid: {{raffleForm.valid}}</p>
+  <p>Form Invalid: {{raffleForm.invalid}}</p>
+  <p>Is Drawing: {{isDrawing}}</p>
+  <p>Eligible Count: {{eligibleCount}}</p>
+  <p>Selected Areas: {{selectedAreas | json}}</p>
+  <p>Prize Name: {{raffleForm.get('prizeName')?.value}}</p>
+  <p>Number of Winners: {{raffleForm.get('numberOfWinners')?.value}}</p>
+  <p>Selected Areas Form: {{raffleForm.get('selectedAreas')?.value | json}}</p>
+</div>
+      <!-- New Draw Button -->
+      <div class="new-draw-container">
+        <ion-button
+          expand="block"
+          fill="outline"
+          color="primary"
+          (click)="newDraw()">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          Start New Draw
+        </ion-button>
+      </div>
+
+    </ion-card-content>
+  </ion-card>
+
 </ion-content>
