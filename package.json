@@ -29,6 +29,7 @@
     "@capacitor/keyboard": "7.0.1",
     "@capacitor/status-bar": "7.0.1",
     "@ionic/angular": "^8.5.7",
+    "@types/xlsx": "^0.0.35",
     "crypto-browserify": "^3.12.1",
     "dotenv": "^16.5.0",
     "ionicons": "^7.0.0",
@@ -38,6 +39,7 @@
     "rxjs": "~7.8.0",
     "sweetalert2": "^11.22.0",
     "tslib": "^2.3.0",
+    "xlsx": "^0.18.5",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {

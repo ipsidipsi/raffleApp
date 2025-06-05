@@ -66,6 +66,17 @@
       </div>
     </div>
   </div>
+  <div class="export-buttons">
+          <ion-button fill="outline" size="small" (click)="exportToCSV()" color="success">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+            CSV
+          </ion-button>
+          <ion-button fill="outline" size="small" (click)="exportToExcel()" color="primary">
+            <ion-icon name="document-outline" slot="start"></ion-icon>
+            Excel
+          </ion-button>
+        </div>
+      
 
   <!-- Error State -->
   <ion-card *ngIf="!isLoading && !reportData" class="error-card">
