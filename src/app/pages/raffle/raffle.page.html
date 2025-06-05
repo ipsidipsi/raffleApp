@@ -1,179 +1,732 @@
+<!-- src/app/pages/raffle/raffle.page.html -->
 <ion-header [translucent]="true">
-  <ion-toolbar color="primary">
+  <ion-toolbar class="custom-toolbar">
     <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
+      <ion-menu-button color="light"></ion-menu-button>
     </ion-buttons>
-    <ion-title>Raffle Draw System</ion-title>
+    <ion-title class="custom-title">🎁 Raffle Draw System</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
-
-  <!-- Draw Setup Section -->
-  <ion-card *ngIf="winners.length === 0">
-    <ion-card-header>
-      <ion-card-title>Setup New Draw</ion-card-title>
-      <ion-card-subtitle>Configure your raffle parameters</ion-card-subtitle>
-    </ion-card-header>
-
-    <ion-card-content>
-      <form [formGroup]="raffleForm" (ngSubmit)="executeDraw()">
-
-     <!-- Prize Name - Remove [disabled] attribute -->
-<ion-item>
-  <ion-label position="floating">Prize Name *</ion-label>
-  <ion-input
-    formControlName="prizeName"
-    placeholder="e.g., Electric Fan, Rice Cooker">
-  </ion-input>
-</ion-item>
-
-        <!-- Number of Winners - Remove [disabled] attribute -->
-<ion-item>
-  <ion-label position="floating">Number of Winners *</ion-label>
-  <ion-input
-    type="number"
-    formControlName="numberOfWinners"
-    min="1"
-    max="100">
-  </ion-input>
-</ion-item>
-       <!-- Area Selection - Remove [disabled] attribute -->
-<<ion-item>
-  <ion-label position="floating">Select Areas *</ion-label>
-  <ion-select
-    multiple="true"
-    formControlName="selectedAreas"
-    placeholder="Choose areas to include in draw">
-    <ion-select-option
-      *ngFor="let area of availableAreas"
-      [value]="area.AreaCode">
-      {{area.AreaName}} ({{area.EligibleRegistrants}} eligible)
-    </ion-select-option>
-  </ion-select>
-</ion-item>
-
+<ion-content [fullscreen]="true" class="raffle-content">
+  
+  <!-- Main Container -->
+  <div class="main-container">
+    
+    <!-- Left Panel - Draw Setup -->
+    <div class="panel left-panel" [class.blur-effect]="winners.length > 0">
+      <div class="panel-header">
+        <h2>✨ Setup New Draw</h2>
+        <p>Configure your raffle parameters</p>
+      </div>
+      
+      <form [formGroup]="raffleForm" (ngSubmit)="executeDraw()" class="draw-form">
+        
+        <!-- Prize Name -->
+        <div class="input-group">
+          <label class="floating-label">Prize Name</label>
+          <ion-input 
+            formControlName="prizeName" 
+            placeholder="e.g., Electric Fan, Laptop"
+            class="custom-input">
+          </ion-input>
+          <div class="input-underline"></div>
+        </div>
+        
+        <!-- Number of Winners -->
+        <div class="input-group">
+          <label class="floating-label">Number of Winners</label>
+          <ion-input 
+            type="number" 
+            formControlName="numberOfWinners"
+            min="1" max="100"
+            class="custom-input">
+          </ion-input>
+          <div class="input-underline"></div>
+        </div>
+        
+        <!-- Area Selection -->
+        <div class="input-group">
+          <label class="floating-label">Select Areas</label>
+          <ion-select 
+            multiple="true"
+            formControlName="selectedAreas"
+            placeholder="Choose areas..."
+            class="custom-select">
+            <ion-select-option 
+              *ngFor="let area of availableAreas" 
+              [value]="area.AreaCode">
+              {{area.AreaName}} ({{area.EligibleRegistrants}} eligible)
+            </ion-select-option>
+          </ion-select>
+        </div>
+        
+        <!-- Eligible Count Display -->
+        <div class="eligible-chip" *ngIf="eligibleCount > 0">
+          <ion-icon name="people-outline"></ion-icon>
+          <span>{{eligibleCount}} Eligible Registrants</span>
+        </div>
+        
         <!-- Draw Button -->
-        <div class="draw-button-container">
-          <ion-button
-            expand="block"
-            type="submit"
-            [disabled]="raffleForm.invalid || isDrawing || eligibleCount === 0"
-            color="success"
-            size="large">
-            <ion-icon name="gift-outline" slot="start"></ion-icon>
-            {{ isDrawing ? 'Drawing...' : 'Execute Draw' }}
-          </ion-button>
+        <button 
+          type="submit"
+          class="draw-button"
+          [disabled]="raffleForm.invalid || isDrawing || eligibleCount === 0 || hasPendingWinners()"
+          [class.loading]="isDrawing">
+          <span *ngIf="!isDrawing">
+            <ion-icon name="gift-outline"></ion-icon>
+            Execute Draw
+          </span>
+          <span *ngIf="isDrawing">
+            <ion-spinner name="crescent"></ion-spinner>
+            Drawing...
+          </span>
+        </button>
+        
+        <!-- Disabled Message -->
+        <div class="disabled-message" *ngIf="hasPendingWinners()">
+          <ion-icon name="warning-outline"></ion-icon>
+          Please confirm all winners before starting a new draw
         </div>
-
+        
       </form>
-    </ion-card-content>
-  </ion-card>
+    </div>
 
-  <!-- Drawing Animation -->
-  <ion-card *ngIf="drawingAnimation" class="drawing-animation">
-    <ion-card-content class="ion-text-center">
-      <h2>🎰 Drawing Winners...</h2>
-      <div class="animation-container">
-        <div *ngFor="let number of animationNumbers" class="rolling-number">
-          {{number}}
-        </div>
-      </div>
-      <ion-spinner name="crescent" color="primary"></ion-spinner>
-      <p>Please wait while we select the lucky winners!</p>
-    </ion-card-content>
-  </ion-card>
-
-  <!-- Winners Display -->
-  <ion-card *ngIf="winners.length > 0 && !drawingAnimation">
-    <ion-card-header>
-      <ion-card-title>
-        🎉 Winners Selected!
-        <ion-chip color="success">
-          <ion-label>{{winners.length}} Winners</ion-label>
-        </ion-chip>
-      </ion-card-title>
-      <ion-card-subtitle>Prize: {{winners[0].prizeWon}}</ion-card-subtitle>
-    </ion-card-header>
-
-    <ion-card-content>
-
-      <!-- Bulk Actions -->
-      <div class="bulk-actions">
-        <ion-button
-          fill="outline"
-          color="success"
-          (click)="bulkConfirm('valid_winner')"
-          [disabled]="!hasPendingWinners()">
-          <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-          Confirm All
-        </ion-button>
-
-        <ion-button
-          fill="outline"
-          color="danger"
-          (click)="bulkConfirm('invalid_winner')"
-          [disabled]="!hasPendingWinners()">
-          <ion-icon name="close-circle-outline" slot="start"></ion-icon>
-          Disqualify All
-        </ion-button>
-      </div>
-
-      <!-- Winners List -->
-      <div class="winners-list">
-        <ion-item *ngFor="let winner of winners; let i = index" class="winner-item">
-          <ion-avatar slot="start">
-            <div class="winner-number">{{i + 1}}</div>
-          </ion-avatar>
-
-          <ion-label>
-            <h2>{{winner.consumerName}}</h2>
-            <p>Account: {{winner.accountNumber}}</p>
-            <p>Area: {{winner.AreaName}}</p>
-            <p>Address: {{winner.consumerAddress}}</p>
-          </ion-label>
-
-          <div slot="end" class="winner-actions">
-            <ion-chip [color]="getStatusColor(winner.status)">
-              <ion-label>{{getStatusText(winner.status)}}</ion-label>
-            </ion-chip>
-
-            <div class="action-buttons" *ngIf="isPendingValidation(winner.status)">
-              <ion-button
-                size="small"
-                fill="clear"
-                color="success"
-                (click)="confirmWinner(winner, 'valid_winner')">
-                <ion-icon name="checkmark-circle-outline"></ion-icon>
-              </ion-button>
-
-              <ion-button
-                size="small"
-                fill="clear"
-                color="danger"
-                (click)="confirmWinner(winner, 'invalid_winner')">
-                <ion-icon name="close-circle-outline"></ion-icon>
-              </ion-button>
+    <!-- Right Panel - Winners -->
+    <div class="panel right-panel" [class.show]="winners.length > 0 || drawingAnimation">
+      
+      <!-- Drawing Animation -->
+      <div class="drawing-animation" *ngIf="drawingAnimation">
+        <div class="animation-content">
+          <h2>🎰 Drawing Winners...</h2>
+          <div class="rolling-numbers">
+            <div *ngFor="let number of animationNumbers" class="rolling-number">
+              {{number}}
             </div>
           </div>
-        </ion-item>
-      </div>
-      <div style="background: #f0f0f0; padding: 10px; margin: 10px 0;">
-
-</div>
-      <!-- New Draw Button -->
-      <div class="new-draw-container">
-        <ion-button
-          expand="block"
-          fill="outline"
-          color="primary"
-          (click)="newDraw()">
-          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-          Start New Draw
-        </ion-button>
+          <div class="spinner-container">
+            <ion-spinner name="crescent" color="light"></ion-spinner>
+          </div>
+          <p>Selecting lucky winners from {{eligibleCount}} eligible registrants!</p>
+        </div>
       </div>
 
-    </ion-card-content>
-  </ion-card>
+      <!-- Winners Display -->
+      <div class="winners-section" *ngIf="winners.length > 0 && !drawingAnimation">
+        
+        <!-- Winners Header -->
+        <div class="winners-header">
+          <div class="header-content">
+            <h2>🎉 Winners Selected!</h2>
+            <div class="winner-stats">
+              <span class="prize-name">{{winners[0].prizeWon}}</span>
+              <span class="winner-count">{{winners.length}} Winner{{winners.length > 1 ? 's' : ''}}</span>
+            </div>
+          </div>
+          
+          <!-- Bulk Actions -->
+          <div class="bulk-actions">
+            <button 
+              class="bulk-btn confirm-all"
+              (click)="bulkConfirm('valid_winner')"
+              [disabled]="!hasPendingWinners()">
+              <ion-icon name="checkmark-circle"></ion-icon>
+              Confirm All
+            </button>
+            
+            <button 
+              class="bulk-btn reject-all"
+              (click)="bulkConfirm('invalid_winner')"
+              [disabled]="!hasPendingWinners()">
+              <ion-icon name="close-circle"></ion-icon>
+              Reject All
+            </button>
+          </div>
+        </div>
+        
+        <!-- Winners List -->
+        <div class="winners-list">
+          <div 
+            *ngFor="let winner of winners; let i = index; trackBy: trackByWinnerId" 
+            class="winner-card"
+            [class.confirmed]="winner.status === 'valid_winner'"
+            [class.rejected]="winner.status === 'invalid_winner'"
+            [class.slide-out]="winner.animating"
+            [@slideAnimation]="winner.status">
+            
+            <div class="winner-number">{{i + 1}}</div>
+            
+            <div class="winner-info">
+              <h3>{{winner.consumerName}}</h3>
+              <div class="winner-details">
+                <span class="account">Account: {{winner.accountNumber}}</span>
+                <span class="area">{{winner.AreaName}}</span>
+              </div>
+              <p class="address">{{winner.consumerAddress}}</p>
+            </div>
+            
+            <div class="winner-actions">
+              <div class="status-badge" [class]="getStatusClass(winner.status)">
+                {{getStatusText(winner.status)}}
+              </div>
+              
+              <div class="action-buttons" *ngIf="isPendingValidation(winner.status)">
+                <button 
+                  class="action-btn confirm"
+                  (click)="confirmWinner(winner, 'valid_winner')">
+                  <ion-icon name="checkmark"></ion-icon>
+                </button>
+                
+                <button 
+                  class="action-btn reject"
+                  (click)="confirmWinner(winner, 'invalid_winner')">
+                  <ion-icon name="close"></ion-icon>
+                </button>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+        
+        <!-- New Draw Button -->
+        <div class="new-draw-section" *ngIf="!hasPendingWinners()">
+          <button class="new-draw-btn" (click)="newDraw()">
+            <ion-icon name="add-circle-outline"></ion-icon>
+            Start New Draw
+          </button>
+        </div>
+        
+      </div>
+    </div>
+    
+  </div>
 
 </ion-content>
+
+<style>
+/* Modern Raffle Page Styles */
+.custom-toolbar {
+  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --color: white;
+}
+
+.custom-title {
+  font-weight: 600;
+  font-size: 1.3rem;
+}
+
+.raffle-content {
+  --background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.main-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  padding: 2rem;
+  min-height: calc(100vh - 120px);
+}
+
+.panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.left-panel {
+  padding: 2rem;
+  position: relative;
+}
+
+.blur-effect {
+  filter: blur(2px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.right-panel {
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.right-panel.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.panel-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.panel-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.8rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.panel-header p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Form Styles */
+.draw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.floating-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.custom-input, .custom-select {
+  --background: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  border-radius: 0;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.custom-input:focus, .custom-select:focus {
+  border-bottom-color: #667eea;
+}
+
+.input-underline {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.custom-input:focus + .input-underline {
+  transform: scaleX(1);
+}
+
+.eligible-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.75rem 1rem;
+  border-radius: 25px;
+  font-weight: 600;
+  justify-content: center;
+}
+
+.draw-button {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 25px;
+  color: white;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.draw-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.draw-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.disabled-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #ff6b6b;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+/* Drawing Animation */
+.drawing-animation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  text-align: center;
+  padding: 2rem;
+}
+
+.animation-content h2 {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  animation: pulse 2s infinite;
+}
+
+.rolling-numbers {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 2rem 0;
+}
+
+.rolling-number {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 1rem;
+  border-radius: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 1.2rem;
+  animation: roll 0.5s infinite alternate;
+}
+
+.spinner-container {
+  margin: 2rem 0;
+}
+
+/* Winners Section */
+.winners-section {
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.winners-header {
+  margin-bottom: 2rem;
+}
+
+.header-content h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.winner-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.prize-name {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.winner-count {
+  background: #4CAF50;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.bulk-btn {
+  background: none;
+  border: 2px solid;
+  border-radius: 25px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.confirm-all {
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+
+.confirm-all:hover:not(:disabled) {
+  background: #4CAF50;
+  color: white;
+}
+
+.reject-all {
+  border-color: #f44336;
+  color: #f44336;
+}
+
+.reject-all:hover:not(:disabled) {
+  background: #f44336;
+  color: white;
+}
+
+.bulk-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Winners List */
+.winners-list {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 2rem;
+}
+
+.winner-card {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.winner-card.confirmed {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  transform: scale(0.98);
+}
+
+.winner-card.rejected {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  transform: scale(0.98);
+}
+
+.winner-card.slide-out {
+  animation: slideOut 0.5s ease-in-out forwards;
+}
+
+.winner-number {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.winner-info {
+  flex: 1;
+}
+
+.winner-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.winner-details {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.account, .area {
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.address {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.winner-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-badge.confirmed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.rejected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.action-btn.confirm {
+  background: #4CAF50;
+  color: white;
+}
+
+.action-btn.confirm:hover {
+  background: #45a049;
+  transform: scale(1.1);
+}
+
+.action-btn.reject {
+  background: #f44336;
+  color: white;
+}
+
+.action-btn.reject:hover {
+  background: #da190b;
+  transform: scale(1.1);
+}
+
+.new-draw-section {
+  text-align: center;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
+}
+
+.new-draw-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 25px;
+  color: white;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 auto;
+}
+
+.new-draw-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes roll {
+  0% { transform: translateY(-5px); }
+  100% { transform: translateY(5px); }
+}
+
+@keyframes slideOut {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .right-panel {
+    transform: translateY(100%);
+  }
+  
+  .right-panel.show {
+    transform: translateY(0);
+  }
+  
+  .bulk-actions {
+    flex-direction: column;
+  }
+  
+  .winner-details {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .winners-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .winner-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .winner-actions {
+    flex-direction: row;
+    justify-content: center;
+  }
+}
+</style>

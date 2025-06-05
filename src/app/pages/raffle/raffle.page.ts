@@ -1,3 +1,4 @@
+// src/app/pages/raffle/raffle.page.ts - Updated with Animations
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { LoadingController, AlertController, ToastController } from '@ionic/angular';
@@ -8,6 +9,22 @@ import { RaffleService, AreaInfo, Winner, DrawRequest } from '../../services/raf
   selector: 'app-raffle',
   templateUrl: './raffle.page.html',
   styleUrls: ['./raffle.page.scss'],
+  animations: [
+    // Slide animation for winner cards
+    {
+      name: 'slideAnimation',
+      trigger: 'slideAnimation',
+      states: [
+        { name: 'pending_validation', styles: { transform: 'translateX(0)', opacity: '1' } },
+        { name: 'valid_winner', styles: { transform: 'translateX(30px)', opacity: '0.8' } },
+        { name: 'invalid_winner', styles: { transform: 'translateX(-30px)', opacity: '0.8' } }
+      ],
+      transitions: [
+        { from: 'pending_validation', to: 'valid_winner', duration: '0.5s ease-out' },
+        { from: 'pending_validation', to: 'invalid_winner', duration: '0.5s ease-out' }
+      ]
+    }
+  ]
 })
 export class RafflePage implements OnInit {
   raffleForm: FormGroup;
@@ -17,10 +34,13 @@ export class RafflePage implements OnInit {
   currentDrawGuid: string = '';
   isDrawing: boolean = false;
   eligibleCount: number = 0;
-
+  
   // Animation states
   drawingAnimation: boolean = false;
   animationNumbers: string[] = [];
+  
+  // Store original winner data for refresh recovery
+  private originalWinners: Winner[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -30,31 +50,60 @@ export class RafflePage implements OnInit {
     private toastController: ToastController
   ) {
     this.raffleForm = this.fb.group({
-      prizeName: ['', [Validators.required, Validators.minLength(2)]],
-      numberOfWinners: [1, [Validators.required, Validators.min(1), Validators.max(100)]],
-      //selectedAreas: [[], Validators.required]
-       selectedAreas: [[]] ,
+      prizeName: ['', Validators.required],
+      numberOfWinners: [1, [Validators.required, Validators.min(1)]],
+      selectedAreas: [[]]
     });
   }
-  arrayNotEmptyValidator(control: any) {
-  const value = control.value;
-  if (!value || value.length === 0) {
-    return { required: true };
-  }
-  return null;
-}
+
   ngOnInit() {
     this.loadAvailableAreas();
-    console.log('Form initialized:', this.raffleForm.value);
-  console.log('Form valid:', this.raffleForm.valid);
-  // Watch for changes to selectedAreas form control
-  this.raffleForm.get('selectedAreas')?.valueChanges.subscribe(value => {
-    console.log('Form control selectedAreas changed to:', value);
-    this.selectedAreas = value || [];
-    console.log('Updated this.selectedAreas to:', this.selectedAreas);
-    this.updateEligibleCount();
-  });
+    this.setupFormValueChanges();
+    this.checkForUnfinishedDraw();
+  }
 
+  // Check for unfinished draw on page load/refresh
+  private checkForUnfinishedDraw() {
+    const savedDrawData = localStorage.getItem('currentDraw');
+    if (savedDrawData) {
+      try {
+        const drawData = JSON.parse(savedDrawData);
+        this.winners = drawData.winners || [];
+        this.currentDrawGuid = drawData.drawGuid || '';
+        this.originalWinners = [...this.winners];
+        
+        if (this.hasPendingWinners()) {
+          this.presentToast('Restored unfinished draw. Please confirm all winners.', 'warning');
+        }
+      } catch (error) {
+        console.error('Error restoring draw data:', error);
+        localStorage.removeItem('currentDraw');
+      }
+    }
+  }
+
+  // Save current draw state to localStorage
+  private saveDrawState() {
+    if (this.winners.length > 0) {
+      const drawData = {
+        winners: this.winners,
+        drawGuid: this.currentDrawGuid,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('currentDraw', JSON.stringify(drawData));
+    }
+  }
+
+  // Clear saved draw state
+  private clearDrawState() {
+    localStorage.removeItem('currentDraw');
+  }
+
+  private setupFormValueChanges() {
+    this.raffleForm.get('selectedAreas')?.valueChanges.subscribe(value => {
+      this.selectedAreas = value || [];
+      this.updateEligibleCount();
+    });
   }
 
   async loadAvailableAreas() {
@@ -78,130 +127,86 @@ export class RafflePage implements OnInit {
     });
   }
 
-onAreaSelectionChange(event: any) {
-  console.log('onAreaSelectionChange called with:', event.detail.value);
-  this.selectedAreas = event.detail.value || [];
-  console.log('Selected areas updated to:', this.selectedAreas);
-  this.updateEligibleCount();
-}
-updateEligibleCount() {
-  const formAreas = this.raffleForm.get('selectedAreas')?.value || [];
-  this.selectedAreas = formAreas;
+  updateEligibleCount() {
+    const formAreas = this.raffleForm.get('selectedAreas')?.value || [];
+    this.selectedAreas = formAreas;
+    
+    if (formAreas.length === 0) {
+      this.eligibleCount = 0;
+      return;
+    }
 
-  console.log('=== ELIGIBLE COUNT DEBUG ===');
-  console.log('Form areas:', formAreas);
-  console.log('Area codes being sent to API:', formAreas);
-
-  if (formAreas.length === 0) {
-    this.eligibleCount = 0;
-    console.log('No areas selected, eligible count set to 0');
-    return;
+    this.raffleService.getEligibleCount(formAreas).subscribe({
+      next: (response) => {
+        if (response.success && response.data && response.data.length > 0) {
+          this.eligibleCount = response.data.reduce((total, area) => total + area.EligibleCount, 0);
+        } else {
+          this.eligibleCount = 0;
+        }
+      },
+      error: (error) => {
+        console.error('Failed to get eligible count:', error);
+        this.eligibleCount = 0;
+      }
+    });
   }
 
-  console.log('Making API call to getEligibleCount with:', formAreas);
-
-  this.raffleService.getEligibleCount(formAreas).subscribe({
-    next: (response) => {
-      console.log('=== API RESPONSE DEBUG ===');
-      console.log('Full response:', response);
-      console.log('Response success:', response.success);
-      console.log('Response data:', response.data);
-      console.log('Response data length:', response.data?.length);
-      console.log('Response message:', response.message);
-
-      if (response.success && response.data && response.data.length > 0) {
-        console.log('Processing response data...');
-        response.data.forEach((area, index) => {
-          console.log(`Area ${index}:`, area);
-          console.log(`- EligibleCount: ${area.EligibleCount}`);
-        });
-
-        this.eligibleCount = response.data.reduce((total, area) => total + area.EligibleCount, 0);
-        console.log('Final eligible count calculated:', this.eligibleCount);
-      } else {
-        this.eligibleCount = 0;
-        console.log('Setting eligible count to 0 because:');
-        console.log('- Success:', response.success);
-        console.log('- Data exists:', !!response.data);
-        console.log('- Data length:', response.data?.length);
-      }
-    },
-    error: (error) => {
-      console.error('=== API ERROR ===');
-      console.error('Full error:', error);
-      console.error('Error message:', error.message);
-      console.error('Error status:', error.status);
-      this.eligibleCount = 0;
-    }
-  });
-}
   async executeDraw() {
     if (this.raffleForm.invalid) {
       this.presentToast('Please fill all required fields', 'warning');
       return;
     }
 
-    const formValue = this.raffleForm.value;
+    if (this.hasPendingWinners()) {
+      this.presentToast('Please confirm all current winners before starting a new draw', 'warning');
+      return;
+    }
 
+    const formValue = this.raffleForm.value;
+    
     if (formValue.numberOfWinners > this.eligibleCount) {
       this.presentToast(`Only ${this.eligibleCount} eligible registrants available`, 'warning');
       return;
     }
 
-    // Show confirmation alert
     const alert = await this.alertController.create({
       header: 'Confirm Draw',
-      message: `Are you sure you want to draw ${formValue.numberOfWinners} winner(s) for "${formValue.prizeName}"?`,
+      message: `Draw ${formValue.numberOfWinners} winner(s) for "${formValue.prizeName}"?`,
       buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: 'Draw',
-          handler: () => {
-            this.performDraw();
-          }
-        }
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Draw', handler: () => this.performDraw() }
       ]
     });
 
     await alert.present();
   }
-  private disableForm() {
-  this.raffleForm.get('prizeName')?.disable();
-  this.raffleForm.get('numberOfWinners')?.disable();
-  this.raffleForm.get('selectedAreas')?.disable();
-}
-
-private enableForm() {
-  this.raffleForm.get('prizeName')?.enable();
-  this.raffleForm.get('numberOfWinners')?.enable();
-  this.raffleForm.get('selectedAreas')?.enable();
-}
-
 
   async performDraw() {
     this.isDrawing = true;
     this.startDrawingAnimation();
-    this.disableForm();
+
     const drawRequest: DrawRequest = {
       prizeName: this.raffleForm.value.prizeName,
       numberOfWinners: this.raffleForm.value.numberOfWinners,
       areaCodes: this.selectedAreas,
-      createdBy: 'admin' // Get from auth service
+      createdBy: 'admin'
     };
 
-    // Simulate drawing animation for 3 seconds
+    // Animation duration
     setTimeout(() => {
       this.raffleService.executeDraw(drawRequest).subscribe({
         next: (response) => {
           this.stopDrawingAnimation();
           this.isDrawing = false;
-
+          
           if (response.success) {
-            this.winners = response.data.winners;
+            this.winners = response.data.winners.map(winner => ({
+              ...winner,
+              animating: false
+            }));
+            this.originalWinners = [...this.winners];
             this.currentDrawGuid = response.data.drawGuid;
+            this.saveDrawState(); // Save state for refresh recovery
             this.presentToast(`Successfully selected ${response.data.totalWinners} winner(s)!`, 'success');
             this.resetForm();
           } else {
@@ -221,20 +226,20 @@ private enableForm() {
   startDrawingAnimation() {
     this.drawingAnimation = true;
     this.animationNumbers = [];
-
+    
     const interval = setInterval(() => {
       if (!this.drawingAnimation) {
         clearInterval(interval);
         return;
       }
-
+      
       // Generate random account numbers for animation
       const randomNumbers = [];
       for (let i = 0; i < 3; i++) {
         randomNumbers.push((Math.random() * 9999999999).toFixed(0).padStart(10, '0'));
       }
       this.animationNumbers = randomNumbers;
-    }, 100);
+    }, 150);
   }
 
   stopDrawingAnimation() {
@@ -243,8 +248,11 @@ private enableForm() {
   }
 
   async confirmWinner(winner: Winner, status: 'valid_winner' | 'invalid_winner') {
+    // Set animation flag
+    winner.animating = true;
+    
     const loading = await this.loadingController.create({
-      message: status === 'valid_winner' ? 'Confirming winner...' : 'Disqualifying winner...',
+      message: status === 'valid_winner' ? 'Confirming winner...' : 'Rejecting winner...',
     });
     await loading.present();
 
@@ -252,18 +260,34 @@ private enableForm() {
       next: (response) => {
         loading.dismiss();
         if (response.success) {
-          // Update local winner status
+          // Update winner status with animation
           const winnerIndex = this.winners.findIndex(w => w.id === winner.id);
           if (winnerIndex > -1) {
             this.winners[winnerIndex].status = status;
+            this.winners[winnerIndex].animating = false;
+            
+            // Slide fade animation
+            setTimeout(() => {
+              this.winners[winnerIndex].animating = false;
+            }, 500);
           }
-
-          const message = status === 'valid_winner' ? 'Winner confirmed!' : 'Winner disqualified!';
-          this.presentToast(message, 'success');
+          
+          // Save updated state
+          this.saveDrawState();
+          
+          const message = status === 'valid_winner' ? 'Winner confirmed!' : 'Winner rejected!';
+          this.presentToast(message, status === 'valid_winner' ? 'success' : 'warning');
+          
+          // Check if all winners are confirmed
+          if (!this.hasPendingWinners()) {
+            this.clearDrawState(); // Clear saved state when all confirmed
+            this.presentToast('All winners processed! You can now start a new draw.', 'success');
+          }
         }
       },
       error: (error) => {
         loading.dismiss();
+        winner.animating = false;
         console.error('Failed to confirm winner:', error);
         this.presentToast('Failed to update winner status', 'danger');
       }
@@ -278,17 +302,12 @@ private enableForm() {
 
     const alert = await this.alertController.create({
       header: 'Bulk Confirmation',
-      message: `Are you sure you want to ${status === 'valid_winner' ? 'confirm' : 'disqualify'} ALL winners in this draw?`,
+      message: `${status === 'valid_winner' ? 'Confirm' : 'Reject'} ALL winners in this draw?`,
       buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: status === 'valid_winner' ? 'Confirm All' : 'Disqualify All',
-          handler: () => {
-            this.performBulkConfirm(status);
-          }
+        { text: 'Cancel', role: 'cancel' },
+        { 
+          text: status === 'valid_winner' ? 'Confirm All' : 'Reject All',
+          handler: () => this.performBulkConfirm(status)
         }
       ]
     });
@@ -298,27 +317,41 @@ private enableForm() {
 
   async performBulkConfirm(status: 'valid_winner' | 'invalid_winner') {
     const loading = await this.loadingController.create({
-      message: status === 'valid_winner' ? 'Confirming all winners...' : 'Disqualifying all winners...',
+      message: status === 'valid_winner' ? 'Confirming all winners...' : 'Rejecting all winners...',
     });
     await loading.present();
+
+    // Animate all pending winners
+    this.winners.forEach(winner => {
+      if (winner.status === 'pending_validation') {
+        winner.animating = true;
+      }
+    });
 
     this.raffleService.bulkConfirmDraw(this.currentDrawGuid, status).subscribe({
       next: (response) => {
         loading.dismiss();
         if (response.success) {
-          // Update all local winner statuses
+          // Update all winner statuses
           this.winners.forEach(winner => {
             if (winner.status === 'pending_validation') {
               winner.status = status;
+              winner.animating = false;
             }
           });
-
-          const message = status === 'valid_winner' ? 'All winners confirmed!' : 'All winners disqualified!';
-          this.presentToast(message, 'success');
+          
+          this.clearDrawState(); // Clear saved state after bulk action
+          
+          const message = status === 'valid_winner' ? 'All winners confirmed!' : 'All winners rejected!';
+          this.presentToast(message, status === 'valid_winner' ? 'success' : 'warning');
         }
       },
       error: (error) => {
         loading.dismiss();
+        // Reset animation flags on error
+        this.winners.forEach(winner => {
+          winner.animating = false;
+        });
         console.error('Failed to bulk confirm:', error);
         this.presentToast('Failed to update winners', 'danger');
       }
@@ -338,7 +371,22 @@ private enableForm() {
   newDraw() {
     this.winners = [];
     this.currentDrawGuid = '';
+    this.originalWinners = [];
+    this.clearDrawState();
     this.resetForm();
+  }
+
+  // Helper methods for template
+  hasPendingWinners(): boolean {
+    return this.winners.some(w => w.status === 'pending_validation');
+  }
+
+  hasWinners(): boolean {
+    return this.winners && this.winners.length > 0;
+  }
+
+  isPendingValidation(status: string): boolean {
+    return status === 'pending_validation';
   }
 
   getStatusColor(status: string): string {
@@ -353,10 +401,24 @@ private enableForm() {
   getStatusText(status: string): string {
     switch (status) {
       case 'valid_winner': return 'Confirmed';
-      case 'invalid_winner': return 'Disqualified';
+      case 'invalid_winner': return 'Rejected';
       case 'pending_validation': return 'Pending';
       default: return status;
     }
+  }
+
+  getStatusClass(status: string): string {
+    switch (status) {
+      case 'valid_winner': return 'confirmed';
+      case 'invalid_winner': return 'rejected';
+      case 'pending_validation': return 'pending';
+      default: return 'pending';
+    }
+  }
+
+  // Track by function for ngFor optimization
+  trackByWinnerId(index: number, winner: Winner): number {
+    return winner.id;
   }
 
   async presentToast(message: string, color: string = 'primary') {
@@ -368,17 +430,12 @@ private enableForm() {
     });
     toast.present();
   }
-  hasPendingWinners(): boolean {
-  return this.winners.some(w => w.status === 'pending_validation');
-}
 
-hasWinners(): boolean {
-  return this.winners && this.winners.length > 0;
+  // Method to handle page visibility change (detect refresh/navigation)
+  ngOnDestroy() {
+    // Save state before component is destroyed
+    if (this.hasPendingWinners()) {
+      this.saveDrawState();
+    }
+  }
 }
-
-isPendingValidation(status: string): boolean {
-  return status === 'pending_validation';
-}
-}
-
-// ============================================

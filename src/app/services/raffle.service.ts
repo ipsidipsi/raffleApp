@@ -27,6 +27,7 @@ export interface Winner {
   prizeWon: string;
   drawTimestamp: string;
   status: string;
+  animating?: boolean;
 }
 
 export interface DrawResponse {
