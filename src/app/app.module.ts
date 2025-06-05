@@ -11,19 +11,23 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MenuModule } from './menu/menu.module';
 import { MenuComponent } from './menu/menu.component';
 import { JwtInterceptor } from './jwt.interceptor';
+import { NetworkInterceptor } from './interceptors/network-interceptor';
+
 
 import { ApiFallbackInterceptor } from './interceptors/api-fallback.interceptor';
 
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [AppComponent,],
   imports: [
     BrowserModule,
     IonicModule.forRoot(),
     AppRoutingModule,
     HttpClientModule,
     ReactiveFormsModule,
-    MenuModule ],
+    MenuModule,
+
+   ],
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
       // Add the JWT interceptor
@@ -35,6 +39,11 @@ import { ApiFallbackInterceptor } from './interceptors/api-fallback.interceptor'
      {
       provide: HTTP_INTERCEPTORS,
       useClass: ApiFallbackInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: NetworkInterceptor,  // Use this instead of the fallback interceptor
       multi: true
     }
   ],

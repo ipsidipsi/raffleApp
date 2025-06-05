@@ -1,5 +1,18 @@
-<ion-content class="login-container">
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Login</ion-title>
 
+    <!-- Minimal Network Switcher - Top Right -->
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="toggleNetworkMenu($event)">
+        <ion-icon name="settings-outline" slot="start"></ion-icon>
+        <ion-label>{{ getNetworkIcon() }}</ion-label>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="login-container">
   <div class="login-wrapper">
 
     <!-- Left Side (Image) -->
@@ -14,7 +27,7 @@
         <h2>Login</h2>
 
         <ion-item>
-          <ion-label >Username</ion-label>
+          <ion-label>Username</ion-label>
           <ion-input type="text" formControlName="username"></ion-input>
         </ion-item>
 
@@ -36,4 +49,11 @@
 
   </div>
 
+  <!-- Network Status Indicator -->
+  <!-- <div class="network-status-bottom">
+    <ion-chip [color]="selectedNetwork === 'lan' ? 'success' : 'primary'" size="small">
+      <ion-icon [name]="getNetworkIcon()" slot="start"></ion-icon>
+      <ion-label>{{ getNetworkLabel() }}</ion-label>
+    </ion-chip>
+  </div> -->
 </ion-content>
