@@ -70,11 +70,11 @@ ion-content {
     border-radius: 6px;
     white-space: nowrap;
     height: 44px;
-    
+
     &:hover {
       background-color: #0056b3;
     }
-    
+
     &:disabled {
       background-color: #ccc;
       cursor: not-allowed;
@@ -93,11 +93,11 @@ ion-content {
   border-radius: 8px;
   cursor: pointer;
   width: 100%;
-  
+
   &:hover {
     background-color: #218838;
   }
-  
+
   &:disabled {
     background-color: #ccc;
     cursor: not-allowed;
@@ -123,7 +123,7 @@ ion-content {
     font-size: 14px;
     border-radius: 6px;
     border: 1px solid #ccc;
-    
+
     &:focus {
       outline: none;
       border-color: #007BFF;
@@ -138,7 +138,7 @@ ion-content {
     border-radius: 6px;
     border: 1px solid #ccc;
     background-color: white;
-    
+
     &:focus {
       outline: none;
       border-color: #007BFF;
@@ -189,7 +189,7 @@ ion-content {
     border-radius: 6px;
     cursor: pointer;
     font-size: 12px;
-    
+
     &:hover {
       background-color: #c82333;
     }
@@ -229,9 +229,12 @@ ion-content {
 
   .search-bar {
     flex-direction: column;
-    
+
     .compact-input, .compact-select {
       flex: 1;
     }
   }
 }
+
+// ===============
+

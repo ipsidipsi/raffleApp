@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ReportsService, RegistrantReport, AreaReport } from 'src/app/services/reports.service';
 import { LoadingController, ToastController } from '@ionic/angular';
-import { IonSpinner } from "@ionic/angular/standalone";
 
 @Component({
   standalone: false,
@@ -14,6 +13,14 @@ export class RegistrantReportComponent implements OnInit {
   isLoading = false;
   lastRefresh: Date = new Date();
 
+  // Simplified area colors - just for borders now
+  // private areaBorderColors: { [key: string]: string } = {
+  //   '0001': '#2563eb', '0002': '#059669', '0003': '#d97706', '0004': '#7c3aed',
+  //   '0005': '#dc2626', '0006': '#0891b2', '0010': '#65a30d', '0012': '#ea580c',
+  //   '0013': '#db2777', '0014': '#0284c7', '0015': '#9333ea', '0016': '#16a34a',
+  //   '0019': '#ca8a04', '0020': '#e11d48'
+  // };
+
   constructor(
     private reportsService: ReportsService,
     private loadingController: LoadingController,
@@ -22,7 +29,6 @@ export class RegistrantReportComponent implements OnInit {
 
   ngOnInit() {
     this.loadReport();
-    // Auto-refresh every 30 seconds
     setInterval(() => {
       this.loadReport(false);
     }, 30000);
@@ -74,27 +80,37 @@ export class RegistrantReportComponent implements OnInit {
     toast.present();
   }
 
-  // Helper method to arrange areas in 3x5 grid
-  getAreaGrid(): AreaReport[][] {
+  formatLargeNumber(num: number): string {
+    return num.toLocaleString();
+  }
+
+  formatAreaCount(num: number): string {
+    return num.toLocaleString();
+  }
+
+  getShortAreaName(fullName: string): string {
+    return fullName
+      .replace(' CO', '')
+      .replace(' SO', '')
+      // .replace('REINA MERCEDES', 'R. MERCEDES')
+      // .replace('SAN GUILLERMO', 'S. GUILLERMO')
+      // .replace('SAN AGUSTIN', 'S. AGUSTIN')
+      // .replace('SAN ISIDRO', 'S. ISIDRO')
+      // .replace('SAN MATEO', 'S. MATEO');
+  }
+
+  // getAreaBorderStyle(areaCode: string): string {
+  //   const color = this.areaBorderColors[areaCode] || '#e2e8f0';
+  //   return `4px solid ${color}`;
+  // }
+
+  getEmptySlots(): number[] {
     if (!this.reportData?.areaBreakdown) return [];
 
-    const areas = this.reportData.areaBreakdown;
-    const grid: AreaReport[][] = [];
+    const currentCount = this.reportData.areaBreakdown.length;
+    const maxSlots = 15;
+    const emptyCount = Math.max(0, maxSlots - currentCount);
 
-    // Create 5 rows with 3 columns each
-    for (let i = 0; i < 5; i++) {
-      const row: AreaReport[] = [];
-      for (let j = 0; j < 3; j++) {
-        const index = i * 3 + j;
-        if (index < areas.length) {
-          row.push(areas[index]);
-        }
-      }
-      if (row.length > 0) {
-        grid.push(row);
-      }
-    }
-
-    return grid;
+    return Array(emptyCount).fill(0).map((_, i) => i);
   }
 }

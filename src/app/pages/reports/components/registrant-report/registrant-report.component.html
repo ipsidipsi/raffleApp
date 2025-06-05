@@ -7,37 +7,64 @@
 
   <!-- Report Content -->
   <div *ngIf="!isLoading && reportData">
-    <!-- Header with Total Count -->
+    <!-- Header Card - Total Consumers -->
     <ion-card class="total-card">
-      <ion-card-content class="ion-text-center">
-        <div class="total-number">{{ reportData.totalRegistrants }}</div>
-        <div class="total-label">Total Registered Consumers</div>
+      <ion-card-content>
+        <!-- COMPLETELY CENTERED CONTENT -->
+        <div class="total-content-centered">
+          <div class="total-title-centered">
+            <div>TOTAL REGISTRANTS</div>
+            <!-- <div>OF REGISTERED</div>
+            <div>CONSUMERS</div> -->
+          </div>
+          <div class="total-number-centered">{{ formatLargeNumber(reportData.totalRegistrants) }}</div>
+        </div>
+
+        <!-- Last Updated -->
         <div class="last-update">
-          Last updated: {{ lastRefresh | date:'short' }}
-          <ion-button fill="clear" size="small" (click)="refreshReport()">
+          <span>Last updated: {{ lastRefresh | date:'MMM d, y, h:mm a' }}</span>
+          <ion-button fill="clear" size="small" (click)="refreshReport()" class="refresh-btn">
             <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
           </ion-button>
         </div>
       </ion-card-content>
     </ion-card>
 
-    <!-- Area Breakdown Grid (3x5) -->
-    <ion-card class="area-grid-card">
-      <ion-card-header>
-        <ion-card-title>Registrants by Area</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="area-grid">
-          <div *ngFor="let row of getAreaGrid()" class="grid-row">
-            <div *ngFor="let area of row" class="grid-cell">
-              <div class="area-code">{{ area.areaCode }}</div>
-              <div class="area-name">{{ area.areaName }}</div>
-              <div class="area-count">{{ area.registrantCount }}</div>
-            </div>
+    <!-- Area Section -->
+    <div class="area-section">
+      <h2 class="section-title">Registrants by Area</h2>
+
+      <!-- Area Grid (3x5) -->
+      <div class="area-grid">
+        <div
+          *ngFor="let area of reportData.areaBreakdown"
+          class="area-card-horizontal"
+         >
+
+          <!-- Left Side - Area Info -->
+          <div class="area-info">
+            <!-- <div class="area-code">{{ area.areaCode }}</div> -->
+            <div class="area-name">{{ getShortAreaName(area.areaName) }}</div>
+          </div>
+
+          <!-- Right Side - Count -->
+          <div class="area-count-section">
+            <div class="area-count">{{ formatAreaCount(area.registrantCount) }}</div>
           </div>
         </div>
-      </ion-card-content>
-    </ion-card>
+
+        <!-- Empty slots if less than 15 areas -->
+        <div *ngFor="let i of getEmptySlots()" class="area-card-horizontal empty-card">
+          <div class="area-info">
+            <div class="area-code">—</div>
+            <div class="area-name">No Area</div>
+          </div>
+          <div class="area-count-section">
+            <div class="area-count">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Error State -->

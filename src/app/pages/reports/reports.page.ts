@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { IonContent } from '@ionic/angular';
 import { AuthService } from 'src/app/auth.service';
 
 @Component({
@@ -8,9 +9,10 @@ import { AuthService } from 'src/app/auth.service';
   styleUrls: ['./reports.page.scss'],
 })
 export class ReportsPage implements OnInit {
+
   selectedSegment: string = 'registrants';
   isAdmin: boolean = false;
-
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
@@ -25,6 +27,7 @@ export class ReportsPage implements OnInit {
     if (!this.isAdmin && this.selectedSegment === 'raffle') {
       this.selectedSegment = 'registrants';
     }
+
   }
 
   onSegmentChange(event: any) {

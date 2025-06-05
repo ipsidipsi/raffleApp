@@ -1,13 +1,6 @@
-/*
- * App Global CSS
- * ----------------------------------------------------------------------------
- * Put style rules here that you want to apply globally. These styles are for
- * the entire app and not just one component. Additionally, this file can be
- * used as an entry point to import other CSS/Sass files to be included in the
- * output CSS.
- * For more information on global stylesheets, visit the documentation:
- * https://ionicframework.com/docs/layout/global-stylesheets
- */
+/* ===================================================================
+   SAFE GLOBAL.SCSS - Minimal changes to preserve existing functionality
+   =================================================================== */
 
 /* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
@@ -25,18 +18,52 @@
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
-
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
+/* Keep your dark mode setting as it was */
 @import "@ionic/angular/css/palettes/dark.system.css";
 
-/* SweetAlert2 fixes for Ionic */
+/* ===================================================================
+   MINIMAL CONSISTENCY IMPROVEMENTS - Won't break existing styles
+   =================================================================== */
+
+/* Browser reset for form elements - KEEP YOUR ORIGINAL */
+* {
+  box-sizing: border-box;
+}
+
+/* Prevent font size adjustments - SAFE addition */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* KEEP ALL YOUR ORIGINAL FORM STYLES */
+input, textarea, select {
+  font-family: inherit !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+  color: #000000 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #cccccc !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  margin: 0 !important;
+  outline: none !important;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #007bff !important;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+}
+
+/* Remove browser default styling */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+
+/* KEEP ALL YOUR SWEETALERT2 STYLES */
 .swal2-container {
   z-index: 99999 !important;
   position: fixed !important;
@@ -93,4 +120,471 @@
     max-width: 90% !important;
     min-width: 280px !important;
   }
+}
+
+/* KEEP ALL YOUR ION-INPUT OVERRIDES */
+ion-input {
+  --background: #ffffff !important;
+  --color: #000000 !important;
+  --placeholder-color: #666666 !important;
+  --border-color: #cccccc !important;
+  --border-radius: 8px !important;
+  --border-width: 1px !important;
+  --border-style: solid !important;
+  --padding-start: 16px !important;
+  --padding-end: 16px !important;
+  --padding-top: 12px !important;
+  --padding-bottom: 12px !important;
+}
+
+ion-input input {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #cccccc !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+  font-size: 16px !important;
+}
+
+ion-input input:-webkit-autofill,
+ion-input input:-webkit-autofill:hover,
+ion-input input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #000000 !important;
+  background-color: #ffffff !important;
+}
+
+ion-textarea {
+  --background: #ffffff !important;
+  --color: #000000 !important;
+  --placeholder-color: #666666 !important;
+  --border-color: #cccccc !important;
+  --border-radius: 8px !important;
+  --border-width: 1px !important;
+  --border-style: solid !important;
+  --padding-start: 16px !important;
+  --padding-end: 16px !important;
+  --padding-top: 12px !important;
+  --padding-bottom: 12px !important;
+}
+
+ion-item {
+  --background: #ffffff !important;
+  --color: #000000 !important;
+  --border-color: #e0e0e0 !important;
+}
+
+ion-label {
+  color: #333333 !important;
+  font-weight: 500 !important;
+}
+
+/* KEEP YOUR DARK MODE PREVENTION */
+ion-app {
+  color-scheme: light !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  ion-input {
+    --background: #ffffff !important;
+    --color: #000000 !important;
+  }
+
+  ion-item {
+    --background: #ffffff !important;
+    --color: #000000 !important;
+  }
+
+  ion-content {
+    --background: #f9f9f9 !important;
+    --color: #000000 !important;
+  }
+}
+
+html {
+  color-scheme: light !important;
+}
+
+body {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* ===================================================================
+   FIXED REGISTRANT REPORT COMPONENT - More specific selectors
+   =================================================================== */
+
+// src/app/pages/reports/components/registrant-report/registrant-report.component.scss
+.registrant-report {
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: #777;
+
+    ion-spinner {
+      margin-bottom: 16px;
+    }
+  }
+
+  // Header Card - Total Consumers
+  .total-card {
+    margin-bottom: 32px;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(79, 70, 229, 0.3);
+    border: none;
+
+    ion-card-content {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 40px 32px;
+      position: relative;
+      overflow: hidden;
+
+      // Decorative background elements
+      &::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 150px;
+        height: 150px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        z-index: 1;
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -30px;
+        left: -30px;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        z-index: 1;
+      }
+    }
+
+    .total-content {
+      display: flex;
+      align-items: center;
+      justify-content: center; // CENTERED CONTENT
+      text-align: center; // CENTERED TEXT
+      gap: 32px;
+      position: relative;
+      z-index: 2;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .total-left {
+        flex: 0 0 auto;
+
+        .total-title {
+          div {
+            font-size: 1.8rem;
+            font-weight: 700;
+            line-height: 1.1;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            opacity: 0.95;
+
+            @media (max-width: 768px) {
+              font-size: 1.4rem;
+            }
+          }
+        }
+      }
+
+      .total-right {
+        flex: 0 0 auto;
+
+        .total-number {
+          font-size: 5.5rem;
+          font-weight: 900;
+          line-height: 1;
+          text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+          letter-spacing: -2px;
+
+          @media (max-width: 768px) {
+            font-size: 3.5rem;
+          }
+
+          @media (max-width: 480px) {
+            font-size: 2.8rem;
+          }
+        }
+      }
+    }
+
+    .last-update {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 0.95rem;
+      opacity: 0.9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      position: relative;
+      z-index: 2;
+
+      .refresh-btn {
+        --color: rgba(255, 255, 255, 0.8);
+        --color-hover: white;
+        height: 32px;
+        width: 32px;
+
+        ion-icon {
+          font-size: 18px;
+        }
+
+        &:hover {
+          --color: white;
+          transform: rotate(180deg);
+          transition: all 0.3s ease;
+        }
+      }
+    }
+  }
+
+  // Area Section
+  .area-section {
+    .section-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .area-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+
+      @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      // VERY SPECIFIC SELECTOR to override global styles
+      .area-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px 20px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid #f1f5f9;
+        position: relative;
+        transition: all 0.3s ease;
+        min-height: 120px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        &.empty-card {
+          background: #f8fafc;
+          border: 2px dashed #e2e8f0;
+          opacity: 0.6;
+
+          &:hover {
+            transform: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+          }
+        }
+
+        .area-name {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 12px;
+          line-height: 1.2;
+        }
+
+        .area-count {
+          font-size: 2.5rem;
+          font-weight: 900;
+          color: #1e293b;
+          line-height: 1;
+          letter-spacing: -1px;
+
+          @media (max-width: 480px) {
+            font-size: 2rem;
+          }
+        }
+      }
+
+      // COLORED BORDERS - Use CSS custom properties and very specific selectors
+      .area-card {
+        &[data-area="0001"] {
+          border-left: 5px solid #3b82f6;
+        }
+        &[data-area="0002"] {
+          border-left: 5px solid #10b981;
+        }
+        &[data-area="0003"] {
+          border-left: 5px solid #f59e0b;
+        }
+        &[data-area="0004"] {
+          border-left: 5px solid #8b5cf6;
+        }
+        &[data-area="0005"] {
+          border-left: 5px solid #ef4444;
+        }
+        &[data-area="0006"] {
+          border-left: 5px solid #06b6d4;
+        }
+        &[data-area="0010"] {
+          border-left: 5px solid #84cc16;
+        }
+        &[data-area="0012"] {
+          border-left: 5px solid #f97316;
+        }
+        &[data-area="0013"] {
+          border-left: 5px solid #ec4899;
+        }
+        &[data-area="0014"] {
+          border-left: 5px solid #06b6d4;
+        }
+        &[data-area="0015"] {
+          border-left: 5px solid #8b5cf6;
+        }
+        &[data-area="0016"] {
+          border-left: 5px solid #10b981;
+        }
+        &[data-area="0019"] {
+          border-left: 5px solid #f59e0b;
+        }
+        &[data-area="0020"] {
+          border-left: 5px solid #ef4444;
+        }
+
+        &.empty-card {
+          border-left: 5px solid #e2e8f0;
+        }
+      }
+    }
+  }
+
+  // Error State
+  .error-card {
+    margin-top: 40px;
+    border-radius: 16px;
+
+    ion-icon {
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    p {
+      color: #666;
+      margin-bottom: 20px;
+    }
+  }
+}
+
+/* ===================================================================
+   COMPONENT-SPECIFIC STYLE ISOLATION - Add this at the end
+   =================================================================== */
+
+// Target only the registrant report component area cards
+app-registrant-report {
+  .area-card {
+    // Force colored borders using inline styles if needed
+    &[data-area="0001"] { border-left: 5px solid #3b82f6 !important; }
+    &[data-area="0002"] { border-left: 5px solid #10b981 !important; }
+    &[data-area="0003"] { border-left: 5px solid #f59e0b !important; }
+    &[data-area="0004"] { border-left: 5px solid #8b5cf6 !important; }
+    &[data-area="0005"] { border-left: 5px solid #ef4444 !important; }
+    &[data-area="0006"] { border-left: 5px solid #06b6d4 !important; }
+    &[data-area="0010"] { border-left: 5px solid #84cc16 !important; }
+    &[data-area="0012"] { border-left: 5px solid #f97316 !important; }
+    &[data-area="0013"] { border-left: 5px solid #ec4899 !important; }
+    &[data-area="0014"] { border-left: 5px solid #06b6d4 !important; }
+    &[data-area="0015"] { border-left: 5px solid #8b5cf6 !important; }
+    &[data-area="0016"] { border-left: 5px solid #10b981 !important; }
+    &[data-area="0019"] { border-left: 5px solid #f59e0b !important; }
+    &[data-area="0020"] { border-left: 5px solid #ef4444 !important; }
+  }
+
+ // COMPREHENSIVE SCROLLBAR FIX - Replace your previous attempt with this:
+
+// Target the reports page specifically
+app-reports {
+  ion-content {
+    --overflow: visible !important;
+    overflow: visible !important;
+  }
+
+  .scroll-content {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+
+  .inner-scroll {
+    overflow: visible !important;
+  }
+}
+
+// COMPREHENSIVE SCROLLBAR FIX - Replace your previous attempt with this:
+
+// Target the reports page specifically
+app-reports {
+  ion-content {
+    --overflow: visible !important;
+    overflow: visible !important;
+  }
+
+  .scroll-content {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+  }
+
+  .inner-scroll {
+    overflow: visible !important;
+  }
+}
+
+// Also target the registrant component
+app-registrant-report {
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+// Force all ion-content to not scroll on reports
+ion-content.reports-content {
+  --overflow: visible !important;
+  overflow: visible !important;
+
+  .scroll-content {
+    overflow: visible !important;
+  }
+}
 }

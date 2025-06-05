@@ -7,6 +7,7 @@ import { SearchModalComponent } from './search-modal/search-modal.component';
 //import * as Swal from 'sweetalert2';
 //import Swal from 'sweetalert2';
 import { SweetalertService } from 'src/app/services/sweetalert.service';
+import { DataSyncService } from 'src/app/services/data-sync.service';
 
 @Component({
    standalone:false,
@@ -30,6 +31,7 @@ export class RegistrationPage implements OnInit {
     private loadingController: LoadingController,
     private alertController: AlertController,
     private sweetAlert: SweetalertService,
+    private dataSyncService: DataSyncService,
   ) {
     this.registrationForm = this.fb.group({
       stubNumber: ['', [Validators.required, Validators.pattern(/^\d{1,5}$/)]],
@@ -121,12 +123,16 @@ async register() {
         'Registration Successful!',
         `Account ${registrationData.accountNumber} has been registered successfully.`
       );
-      this.clearForm();
+      this.dataSyncService.incrementRegistrantCount();
       this.loadRegisteredConsumers();
+      this.clearForm();
+
     },
     error: async (err) => {
       console.error('Registration failed', err);
+      this.loadRegisteredConsumers();
       this.handleRegistrationError(err);
+
     }
   });
 }
