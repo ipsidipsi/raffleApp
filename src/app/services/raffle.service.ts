@@ -19,6 +19,7 @@ export interface DrawRequest {
 
 export interface Winner {
   id: number;
+  stubNumber:string;
   accountNumber: string;
   consumerName: string;
   consumerAddress: string;

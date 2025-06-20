@@ -1,7 +1,9 @@
+// Update your reports.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { PlatformHttpService } from './platform-http.service'; // Add this import
 
 export interface AreaReport {
   areaCode: string;
@@ -30,6 +32,7 @@ export interface RaffleWinner {
   isWinner: boolean;
   confirmedAt: string | null;
   registrationTimestamp: string;
+  stubNumber:string;
 }
 
 export interface RaffleDraw {
@@ -64,7 +67,10 @@ export interface RaffleReport {
 export class ReportsService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private platformHttp: PlatformHttpService // Add this
+  ) {}
 
   private getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('access_token');
@@ -75,20 +81,19 @@ export class ReportsService {
   }
 
   getRegistrantReport(): Observable<RegistrantReport> {
-    return this.http.get<RegistrantReport>(`${this.apiUrl}/reports/registrants`, {
-      headers: this.getAuthHeaders()
-    });
+    const headers = this.getAuthHeaders();
+    return this.platformHttp.get(`${this.apiUrl}/reports/registrants`, { headers });
   }
 
   getRaffleReport(): Observable<RaffleReport> {
-    return this.http.get<RaffleReport>(`${this.apiUrl}/reports/raffle`, {
-      headers: this.getAuthHeaders()
-    });
+    const headers = this.getAuthHeaders();
+    return this.platformHttp.get(`${this.apiUrl}/reports/raffle`, { headers });
   }
 
   exportRaffleData(format: 'excel' | 'csv'): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/reports/raffle/export?format=${format}`, {
-      headers: this.getAuthHeaders(),
+    const headers = this.getAuthHeaders();
+    return this.platformHttp.get(`${this.apiUrl}/reports/raffle/export?format=${format}`, {
+      headers,
       responseType: 'blob'
     });
   }

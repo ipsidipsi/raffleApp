@@ -7,7 +7,10 @@ import { BehaviorSubject } from 'rxjs';
 export class NetworkSelectionService {
   private networks = {
     lan: 'http://192.168.44.25:3000',
-    vpn: 'http://26.131.195.44:3000'
+    //lan: 'http://localhost:3000',
+   // vpn: 'http://26.131.195.44:3000'
+    vpn:'http://172.24.234.179:3000',
+    
   };
 
   private currentNetworkSubject = new BehaviorSubject<string>('lan');

@@ -22,6 +22,16 @@ export class RegistrationPage implements OnInit {
   filterType: string = 'stubNumber';
   searchFilter: string = '';
   isLoading = false;
+    Math = Math;
+
+   // New pagination properties
+  currentPage: number = 1;
+  totalRecords: number = 0;
+  totalPages: number = 0;
+  pageSize: number = 20;
+  hasMore: boolean = false;
+
+   private searchTimeout: any;
 
   constructor(
     private fb: FormBuilder,
@@ -118,21 +128,47 @@ async register() {
   };
 
   this.http.post(`${environment.apiUrl}/registration/`, registrationData).subscribe({
-    next: async (response) => {
+    next: async (response: any) => {
       this.sweetAlert.showSuccess(
         'Registration Successful!',
         `Account ${registrationData.accountNumber} has been registered successfully.`
       );
-      this.dataSyncService.incrementRegistrantCount();
-      this.loadRegisteredConsumers();
-      this.clearForm();
 
+      // Add to local list if we're on the first page and no search filter
+      if (this.currentPage === 1 && !this.searchFilter.trim()) {
+        const newRegistrant = {
+          id: response.id || Date.now(),
+          stubNumber: registrationData.stubNumber,
+          accountNumber: registrationData.accountNumber,
+          consumerName: this.registrationForm.value.consumerName,
+          consumerAddress: this.registrationForm.value.consumerAddress,
+          registrationTimestamp: new Date().toISOString()
+        };
+
+        // Add to beginning of list (latest first)
+        this.registeredConsumers.unshift(newRegistrant);
+        this.filteredRegistrants = [...this.registeredConsumers];
+
+        // Remove last item if we exceed page size
+        if (this.registeredConsumers.length > this.pageSize) {
+          this.registeredConsumers.pop();
+          this.filteredRegistrants.pop();
+        }
+
+        // Update total count
+        this.totalRecords++;
+        this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+      } else {
+        // If not on first page or filtering, just reload current page
+        this.loadRegisteredConsumers(this.currentPage, true);
+      }
+
+      this.dataSyncService.incrementRegistrantCount();
+      this.clearForm();
     },
     error: async (err) => {
       console.error('Registration failed', err);
-      this.loadRegisteredConsumers();
       this.handleRegistrationError(err);
-
     }
   });
 }
@@ -209,47 +245,165 @@ handleRegistrationError(error: any) {
     this.registrationForm.reset();
   }
 
-async loadRegisteredConsumers() {
-  this.isLoading = true;
+  getPageNumbers(): number[] {
+  const pages: number[] = [];
+  const maxVisiblePages = 5;
+  const half = Math.floor(maxVisiblePages / 2);
 
-  this.http.get(`${environment.apiUrl}/registration/all`).subscribe({
-    next: (data) => {
-      this.registeredConsumers = data as any[];
+  let start = Math.max(1, this.currentPage - half);
+  let end = Math.min(this.totalPages, start + maxVisiblePages - 1);
+
+  // Adjust start if we're near the end
+  if (end - start < maxVisiblePages - 1) {
+    start = Math.max(1, end - maxVisiblePages + 1);
+  }
+
+  for (let i = start; i <= end; i++) {
+    pages.push(i);
+  }
+
+  return pages;
+}
+
+// async loadRegisteredConsumers() {
+//   this.isLoading = true;
+
+//   this.http.get(`${environment.apiUrl}/registration/all?limit=30&offset=0`).subscribe({
+//     next: (data) => {
+//       this.registeredConsumers = data as any[];
+//       this.filteredRegistrants = [...this.registeredConsumers];
+//       this.isLoading = false;
+//     },
+//     error: (err) => {
+//       console.error('Failed to load registered consumers', err);
+//       this.isLoading = false;
+//       this.sweetAlert.showError(
+//     'Loading Failed',
+//     'Unable to load registered consumers. Please refresh the page.'
+//   );
+
+//     }
+//   });
+// }
+
+async loadRegisteredConsumers(page: number = 1, resetList: boolean = true) {
+  // Don't show loading for subsequent pages to prevent flickering
+  if (resetList) {
+    this.isLoading = true;
+  }
+
+  const offset = (page - 1) * this.pageSize;
+
+  let queryParams = `limit=${this.pageSize}&offset=${offset}`;
+
+  if (this.searchFilter && this.searchFilter.trim()) {
+    queryParams += `&filterType=${this.filterType}&filterValue=${encodeURIComponent(this.searchFilter.trim())}`;
+  }
+
+  this.http.get(`${environment.apiUrl}/registration/all?${queryParams}`).subscribe({
+    next: (response: any) => {
+      // Smooth transition without layout shift
+      if (resetList) {
+        this.registeredConsumers = response.registrants;
+      } else {
+        this.registeredConsumers = [...this.registeredConsumers, ...response.registrants];
+      }
+
       this.filteredRegistrants = [...this.registeredConsumers];
+      this.totalRecords = response.total;
+      this.totalPages = response.totalPages;
+      this.currentPage = response.page;
+      this.hasMore = response.hasMore;
+
+      // Always set loading to false
       this.isLoading = false;
     },
     error: (err) => {
       console.error('Failed to load registered consumers', err);
       this.isLoading = false;
-      this.sweetAlert.showError(
-    'Loading Failed',
-    'Unable to load registered consumers. Please refresh the page.'
-  );
 
+      this.sweetAlert.showError(
+        'Loading Failed',
+        'Unable to load registered consumers. Please refresh the page.'
+      );
     }
   });
 }
 
-  filterRegistrants() {
-    if (!this.searchFilter.trim()) {
-      this.filteredRegistrants = [...this.registeredConsumers];
-      return;
-    }
+//   filterRegistrants() {
+//     if (!this.searchFilter.trim()) {
+//       this.filteredRegistrants = [...this.registeredConsumers];
+//       return;
+//     }
 
-    const filter = this.searchFilter.toLowerCase();
-    this.filteredRegistrants = this.registeredConsumers.filter(registrant => {
-      switch (this.filterType) {
-        case 'stubNumber':
-          return registrant.stubNumber?.toString().includes(filter);
-        case 'accountNumber':
-          return registrant.accountNumber?.toLowerCase().includes(filter);
-        case 'consumerName':
-          return registrant.consumerName?.toLowerCase().includes(filter);
-        default:
-          return false;
-      }
-    });
+//     const filter = this.searchFilter.toLowerCase();
+// this.filteredRegistrants = this.registeredConsumers.filter(registrant => {
+//   switch (this.filterType) {
+//     case 'stubNumber':
+//       return registrant.stubNumber?.toString().startsWith(filter);
+//     case 'accountNumber':
+//       return registrant.accountNumber?.toLowerCase().startsWith(filter);
+//     case 'consumerName':
+//       return registrant.consumerName?.toLowerCase().startsWith(filter);
+//     default:
+//       return false;
+//   }
+// });
+//   }
+filterRegistrants() {
+  // Clear previous timeout
+  if (this.searchTimeout) {
+    clearTimeout(this.searchTimeout);
   }
+
+  // Debounce search to avoid too many API calls
+  this.searchTimeout = setTimeout(() => {
+    this.currentPage = 1; // Reset to first page for new search
+    this.loadRegisteredConsumers(1, true); // Load with filter
+  }, 500); // Wait 500ms after user stops typing
+}
+
+// Clear search and reload all data
+clearSearch() {
+  this.searchFilter = '';
+  this.currentPage = 1;
+  this.loadRegisteredConsumers(1, true);
+}
+
+// Load next page
+nextPage() {
+  if (this.hasMore && !this.isLoading) {
+    this.loadRegisteredConsumers(this.currentPage + 1, true);
+  }
+}
+
+// Load previous page
+previousPage() {
+  if (this.currentPage > 1 && !this.isLoading) {
+    this.loadRegisteredConsumers(this.currentPage - 1, true);
+  }
+}
+
+// Go to specific page
+goToPage(page: number) {
+  if (page >= 1 && page <= this.totalPages && page !== this.currentPage && !this.isLoading) {
+    this.loadRegisteredConsumers(page, true);
+  }
+}
+
+// Load more records (append to current list)
+loadMore() {
+  if (this.hasMore && !this.isLoading) {
+    this.loadRegisteredConsumers(this.currentPage + 1, false);
+  }
+}
+
+// Change page size
+changePageSize(newSize: number) {
+  this.pageSize = newSize;
+  this.currentPage = 1;
+  this.loadRegisteredConsumers(1, true);
+}
 
   trackByRegistrant(index: number, registrant: any): any {
     return registrant.id || index;
@@ -291,5 +445,19 @@ performDelete(accountNumber: string) {
       position: 'bottom'
     });
     toast.present();
+  }
+
+    // Add these computed properties
+  get displayStart(): number {
+    return ((this.currentPage - 1) * this.pageSize) + 1;
+  }
+
+  get displayEnd(): number {
+    return Math.min(this.currentPage * this.pageSize, this.totalRecords);
+  }
+
+  get displayText(): string {
+    if (this.totalRecords === 0) return 'No registrants found';
+    return `Showing ${this.displayStart} to ${this.displayEnd} of ${this.totalRecords} registrants`;
   }
 }

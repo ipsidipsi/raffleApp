@@ -5,8 +5,8 @@
 export const environment = {
   production: false,
   //apiUrl: 'http://192.168.160.25:3000' // your NestJS API
-  apiUrl: 'http://localhost:3000' // your NestJS API
-  //apiUrl: 'http://agmaserver:3000'
+  //apiUrl: 'http://localhost:3000' // your NestJS API
+  apiUrl: 'http://172.24.234.179:3000'
  //apiUrl: process.env['API_URL'] || 'http://26.131.195.44:3000',
 };
 

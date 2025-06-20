@@ -5,5 +5,6 @@ export const environment = {
   production: true,
   //apiUrl: process.env['API_URL'] || '26.131.195.44:3000',
   //apiUrl: 'http://agmaserver:3000' // your NestJS API
-  apiUrl: 'http://192.168.44.25:3000'
+ // apiUrl: 'http://192.168.44.25:3000'
+ apiUrl:'http://172.24.234.179:3000'
 };

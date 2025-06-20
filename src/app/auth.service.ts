@@ -4,7 +4,9 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Router } from '@angular/router';
-
+import { Capacitor } from '@capacitor/core';
+//import { PlatformHttpService } from './services/platform-http.service';
+import { PlatformHttpService } from './services/platform-http.service';
 @Injectable({
   providedIn: 'root'
 })
@@ -13,7 +15,11 @@ export class AuthService {
   public currentUser: Observable<any>;
   private apiUrl: string;
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private platformHttp: PlatformHttpService
+  ) {
     this.currentUserSubject = new BehaviorSubject(this.getStoredUser());
     this.currentUser = this.currentUserSubject.asObservable();
     this.apiUrl = environment.apiUrl;
@@ -48,43 +54,44 @@ export class AuthService {
   }
 
   login(username: string, password: string) {
+    console.log('🔍 DEBUG: Environment:', environment);
+    console.log('🔍 DEBUG: API URL:', this.apiUrl);
+    console.log('🔍 DEBUG: Login attempt to:', `${this.apiUrl}/auth/login`);
+    console.log('🔍 DEBUG: Platform check:', Capacitor?.isNativePlatform());
+    console.log('🔍 DEBUG: Current platform:', Capacitor?.getPlatform());
+
     const loginUrl = `${this.apiUrl}/auth/login`;
-    const httpOptions = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json'
-      })
-    };
+    const loginData = { username, password };
 
-    console.log('Attempting login to:', loginUrl);
+    console.log('🔍 DEBUG: Making HTTP request...');
+    console.log('🔍 DEBUG: Using platform HTTP service');
 
-    return this.http.post<any>(
-      loginUrl,
-      { username, password },
-      httpOptions
-    ).pipe(
+    // Use the platform-aware HTTP service instead of regular HttpClient
+    return this.platformHttp.post(loginUrl, loginData).pipe(
       map(response => {
-        console.log('Login response:', response);
+        console.log('✅ DEBUG: Login response received:', response);
 
-        // Store token separately
+        // Store token and user data
         localStorage.setItem('access_token', response.access_token);
-
-        // Store user data (without token in user object)
         const userData = {
           id: response.user.id,
           username: response.user.username,
           role: response.user.role
         };
-
         localStorage.setItem('user', JSON.stringify(userData));
-        console.log('Stored user data:', userData);
+        console.log('✅ DEBUG: Data stored successfully');
 
-        // Update the current user subject
         this.currentUserSubject.next(userData);
-
         return response;
       }),
       catchError(error => {
-        console.error('Login error:', error);
+        console.error('❌ DEBUG: Login error details:', error);
+
+        if (error.status === 0) {
+          console.error('❌ Network Error: Could not connect to server');
+          console.error('❌ This usually means CORS, network, or server issues');
+        }
+
         throw error;
       })
     );

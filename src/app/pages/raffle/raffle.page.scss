@@ -83,6 +83,76 @@
   }
 }
 
+/* Update winner info styles */
+.winner-info {
+  flex: 1;
+}
+
+.primary-info h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.2rem;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stub-number {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.consumer-name {
+  color: #333;
+  font-weight: 600;
+  font-size: 1.75rem;
+}
+
+.secondary-info {
+  margin-bottom: 0.5rem;
+}
+
+.account-badge {
+  background: rgba(102, 126, 234, 0.1);
+  color: #667eea;
+  padding: 0.3rem 0.75rem;
+  border-radius: 15px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.address {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .primary-info h3 {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .stub-number {
+    font-size: 0.85rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .consumer-name {
+    font-size: 1rem;
+  }
+}
+
 .new-draw-container {
   margin-top: 24px;
   padding-top: 20px;
@@ -112,4 +182,26 @@ ion-card {
       flex-direction: column;
     }
   }
+}
+/* Add to your raffle.page.scss */
+.all-areas-option {
+  --color: #667eea !important;
+  font-weight: 600;
+}
+
+.all-areas-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.total-count {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.separator-option {
+  text-align: center;
+  color: #ccc;
+  font-size: 0.8rem;
 }

@@ -80,21 +80,31 @@
 
     <!-- List Section -->
     <div class="list-section">
-      <!-- Search Bar with Filter -->
-      <div class="search-bar">
-        <select [(ngModel)]="filterType" class="compact-select">
-          <option value="stubNumber">Stub Number</option>
-          <option value="accountNumber">Account Number</option>
-          <option value="consumerName">Account Name</option>
-        </select>
-        <input
-          type="text"
-          placeholder="Search..."
-          class="compact-input"
-          [(ngModel)]="searchFilter"
-          (input)="filterRegistrants()"
-        />
-      </div>
+     <!-- Search Bar with Filter -->
+<div class="search-bar">
+  <select [(ngModel)]="filterType" class="compact-select">
+    <option value="stubNumber">Stub Number</option>
+    <option value="accountNumber">Account Number</option>
+    <option value="consumerName">Account Name</option>
+  </select>
+  <input
+    type="text"
+    placeholder="Search..."
+    class="compact-input"
+    [(ngModel)]="searchFilter"
+    (input)="filterRegistrants()"
+  />
+  <button
+    *ngIf="searchFilter"
+    class="clear-search-btn"
+    (click)="clearSearch()"
+  >
+    Clear
+  </button>
+</div>
+      <div class="pagination-info" *ngIf="totalRecords > 0">
+  <span>{{displayText}}</span>
+</div>
 
       <!-- Registrants Cards -->
       <div class="registrants-container">
@@ -119,6 +129,49 @@
           <p>No registrants found</p>
         </div>
       </div>
+
+      <!-- Pagination Controls -->
+<div class="pagination-controls" *ngIf="totalPages > 1">
+  <button
+    class="pagination-btn"
+    (click)="previousPage()"
+    [disabled]="currentPage === 1 || isLoading"
+  >
+    Previous
+  </button>
+
+  <div class="page-numbers">
+    <button
+      *ngFor="let page of getPageNumbers()"
+      class="page-btn"
+      [class.active]="page === currentPage"
+      (click)="goToPage(page)"
+      [disabled]="isLoading"
+    >
+      {{page}}
+    </button>
+  </div>
+
+  <!-- Load More Button (Alternative to pagination) -->
+<div class="load-more-section" *ngIf="hasMore">
+  <button
+    class="load-more-btn"
+    (click)="loadMore()"
+    [disabled]="isLoading"
+  >
+    <span *ngIf="!isLoading">Load More</span>
+    <span *ngIf="isLoading">Loading...</span>
+  </button>
+</div>
+
+  <button
+    class="pagination-btn"
+    (click)="nextPage()"
+    [disabled]="currentPage === totalPages || isLoading"
+  >
+    Next
+  </button>
+</div>
 
       <!-- Loading indicator -->
       <div class="loading-container" *ngIf="isLoading">

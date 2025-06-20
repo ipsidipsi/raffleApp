@@ -30,12 +30,7 @@
         </ion-card-content>
       </ion-card>
 
-      <ion-card class="summary-card pending">
-        <ion-card-content>
-          <div class="summary-number">{{ reportData.summary.pendingWinners }}</div>
-          <div class="summary-label">Pending</div>
-        </ion-card-content>
-      </ion-card>
+
     </div>
 
     <!-- Export Button -->
@@ -107,7 +102,7 @@
 
                   <ion-label>
                     <h3>{{ winner.consumerName }}</h3>
-                    <p>{{ winner.accountNumber }} • {{ winner.areaName }}</p>
+                    <p>{{ winner.accountNumber }} • {{ winner.stubNumber }}</p>
                     <p class="winner-address">{{ winner.consumerAddress }}</p>
                   </ion-label>
 

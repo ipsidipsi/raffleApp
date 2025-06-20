@@ -34,11 +34,11 @@ export class RafflePage implements OnInit {
   currentDrawGuid: string = '';
   isDrawing: boolean = false;
   eligibleCount: number = 0;
-  
+
   // Animation states
   drawingAnimation: boolean = false;
   animationNumbers: string[] = [];
-  
+
   // Store original winner data for refresh recovery
   private originalWinners: Winner[] = [];
 
@@ -71,7 +71,7 @@ export class RafflePage implements OnInit {
         this.winners = drawData.winners || [];
         this.currentDrawGuid = drawData.drawGuid || '';
         this.originalWinners = [...this.winners];
-        
+
         if (this.hasPendingWinners()) {
           this.presentToast('Restored unfinished draw. Please confirm all winners.', 'warning');
         }
@@ -99,12 +99,12 @@ export class RafflePage implements OnInit {
     localStorage.removeItem('currentDraw');
   }
 
-  private setupFormValueChanges() {
-    this.raffleForm.get('selectedAreas')?.valueChanges.subscribe(value => {
-      this.selectedAreas = value || [];
-      this.updateEligibleCount();
-    });
-  }
+
+private setupFormValueChanges() {
+  this.raffleForm.get('selectedAreas')?.valueChanges.subscribe(value => {
+    this.handleAreaSelection(value || []);
+  });
+}
 
   async loadAvailableAreas() {
     const loading = await this.loadingController.create({
@@ -128,28 +128,70 @@ export class RafflePage implements OnInit {
   }
 
   updateEligibleCount() {
-    const formAreas = this.raffleForm.get('selectedAreas')?.value || [];
-    this.selectedAreas = formAreas;
-    
-    if (formAreas.length === 0) {
-      this.eligibleCount = 0;
-      return;
-    }
+  if (this.selectedAreas.length === 0) {
+    this.eligibleCount = 0;
+    return;
+  }
 
-    this.raffleService.getEligibleCount(formAreas).subscribe({
-      next: (response) => {
-        if (response.success && response.data && response.data.length > 0) {
-          this.eligibleCount = response.data.reduce((total, area) => total + area.EligibleCount, 0);
-        } else {
-          this.eligibleCount = 0;
-        }
-      },
-      error: (error) => {
-        console.error('Failed to get eligible count:', error);
+  // If all areas are selected, calculate total from availableAreas
+  if (this.selectedAreas.length === this.availableAreas.length) {
+    this.eligibleCount = this.getTotalEligibleCount();
+    console.log('All areas - Eligible count:', this.eligibleCount);
+    return;
+  }
+
+  // For specific areas, call the API
+  this.raffleService.getEligibleCount(this.selectedAreas).subscribe({
+    next: (response) => {
+      if (response.success && response.data && response.data.length > 0) {
+        this.eligibleCount = response.data.reduce((total, area) => total + area.EligibleCount, 0);
+        console.log('Specific areas - Eligible count:', this.eligibleCount);
+      } else {
         this.eligibleCount = 0;
       }
-    });
+    },
+    error: (error) => {
+      console.error('Failed to get eligible count:', error);
+      this.eligibleCount = 0;
+    }
+  });
+}
+getTotalEligibleCount(): number {
+  return this.availableAreas.reduce((total, area) => total + area.EligibleRegistrants, 0);
+}
+
+
+private handleAreaSelection(selectedValues: string[]) {
+  console.log('Selected values:', selectedValues);
+
+  // Check if "All Areas" is selected
+  if (selectedValues.includes('ALL_AREAS')) {
+    // If "All Areas" is selected, get all area codes
+    const allAreaCodes = this.availableAreas.map(area => area.AreaCode);
+    this.selectedAreas = allAreaCodes;
+
+    // Update form control to show all individual areas selected
+    this.raffleForm.patchValue({
+      selectedAreas: ['ALL_AREAS', ...allAreaCodes]
+    }, { emitEvent: false }); // Prevent infinite loop
+
+    console.log('All areas selected:', allAreaCodes);
+  } else {
+    // Remove "ALL_AREAS" if individual areas are selected
+    this.selectedAreas = selectedValues.filter(value => value !== 'ALL_AREAS');
+
+    // If all individual areas are selected, add "ALL_AREAS" to the display
+    if (this.selectedAreas.length === this.availableAreas.length && this.availableAreas.length > 0) {
+      this.raffleForm.patchValue({
+        selectedAreas: ['ALL_AREAS', ...this.selectedAreas]
+      }, { emitEvent: false });
+    }
   }
+
+  this.updateEligibleCount();
+}
+
+
 
   async executeDraw() {
     if (this.raffleForm.invalid) {
@@ -163,7 +205,7 @@ export class RafflePage implements OnInit {
     }
 
     const formValue = this.raffleForm.value;
-    
+
     if (formValue.numberOfWinners > this.eligibleCount) {
       this.presentToast(`Only ${this.eligibleCount} eligible registrants available`, 'warning');
       return;
@@ -198,7 +240,7 @@ export class RafflePage implements OnInit {
         next: (response) => {
           this.stopDrawingAnimation();
           this.isDrawing = false;
-          
+
           if (response.success) {
             this.winners = response.data.winners.map(winner => ({
               ...winner,
@@ -226,13 +268,13 @@ export class RafflePage implements OnInit {
   startDrawingAnimation() {
     this.drawingAnimation = true;
     this.animationNumbers = [];
-    
+
     const interval = setInterval(() => {
       if (!this.drawingAnimation) {
         clearInterval(interval);
         return;
       }
-      
+
       // Generate random account numbers for animation
       const randomNumbers = [];
       for (let i = 0; i < 3; i++) {
@@ -250,7 +292,7 @@ export class RafflePage implements OnInit {
   async confirmWinner(winner: Winner, status: 'valid_winner' | 'invalid_winner') {
     // Set animation flag
     winner.animating = true;
-    
+
     const loading = await this.loadingController.create({
       message: status === 'valid_winner' ? 'Confirming winner...' : 'Rejecting winner...',
     });
@@ -265,19 +307,19 @@ export class RafflePage implements OnInit {
           if (winnerIndex > -1) {
             this.winners[winnerIndex].status = status;
             this.winners[winnerIndex].animating = false;
-            
+
             // Slide fade animation
             setTimeout(() => {
               this.winners[winnerIndex].animating = false;
             }, 500);
           }
-          
+
           // Save updated state
           this.saveDrawState();
-          
+
           const message = status === 'valid_winner' ? 'Winner confirmed!' : 'Winner rejected!';
           this.presentToast(message, status === 'valid_winner' ? 'success' : 'warning');
-          
+
           // Check if all winners are confirmed
           if (!this.hasPendingWinners()) {
             this.clearDrawState(); // Clear saved state when all confirmed
@@ -305,7 +347,7 @@ export class RafflePage implements OnInit {
       message: `${status === 'valid_winner' ? 'Confirm' : 'Reject'} ALL winners in this draw?`,
       buttons: [
         { text: 'Cancel', role: 'cancel' },
-        { 
+        {
           text: status === 'valid_winner' ? 'Confirm All' : 'Reject All',
           handler: () => this.performBulkConfirm(status)
         }
@@ -339,9 +381,10 @@ export class RafflePage implements OnInit {
               winner.animating = false;
             }
           });
-          
+
           this.clearDrawState(); // Clear saved state after bulk action
-          
+
+
           const message = status === 'valid_winner' ? 'All winners confirmed!' : 'All winners rejected!';
           this.presentToast(message, status === 'valid_winner' ? 'success' : 'warning');
         }
@@ -374,6 +417,8 @@ export class RafflePage implements OnInit {
     this.originalWinners = [];
     this.clearDrawState();
     this.resetForm();
+     // Refresh areas after bulk confirmation
+        this.loadAvailableAreas();
   }
 
   // Helper methods for template

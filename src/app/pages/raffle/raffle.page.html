@@ -9,66 +9,82 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" class="raffle-content">
-  
+
   <!-- Main Container -->
   <div class="main-container">
-    
+
     <!-- Left Panel - Draw Setup -->
     <div class="panel left-panel" [class.blur-effect]="winners.length > 0">
       <div class="panel-header">
         <h2>✨ Setup New Draw</h2>
         <p>Configure your raffle parameters</p>
       </div>
-      
+
       <form [formGroup]="raffleForm" (ngSubmit)="executeDraw()" class="draw-form">
-        
+
         <!-- Prize Name -->
         <div class="input-group">
           <label class="floating-label">Prize Name</label>
-          <ion-input 
-            formControlName="prizeName" 
+          <ion-input
+            formControlName="prizeName"
             placeholder="e.g., Electric Fan, Laptop"
             class="custom-input">
           </ion-input>
           <div class="input-underline"></div>
         </div>
-        
+
         <!-- Number of Winners -->
         <div class="input-group">
           <label class="floating-label">Number of Winners</label>
-          <ion-input 
-            type="number" 
+          <ion-input
+            type="number"
             formControlName="numberOfWinners"
             min="1" max="100"
             class="custom-input">
           </ion-input>
           <div class="input-underline"></div>
         </div>
-        
-        <!-- Area Selection -->
-        <div class="input-group">
-          <label class="floating-label">Select Areas</label>
-          <ion-select 
-            multiple="true"
-            formControlName="selectedAreas"
-            placeholder="Choose areas..."
-            class="custom-select">
-            <ion-select-option 
-              *ngFor="let area of availableAreas" 
-              [value]="area.AreaCode">
-              {{area.AreaName}} ({{area.EligibleRegistrants}} eligible)
-            </ion-select-option>
-          </ion-select>
-        </div>
-        
+
+      <!-- Area Selection with "All Areas" option -->
+       <div class="input-group">
+  <label class="floating-label">Select Areas</label>
+  <ion-select
+    multiple="true"
+    formControlName="selectedAreas"
+    placeholder="Choose areas or select all..."
+    class="custom-select">
+
+    <!-- All Areas Option with Special Styling -->
+    <ion-select-option value="ALL_AREAS" class="all-areas-option">
+      <div class="all-areas-content">
+        <ion-icon name="globe-outline"></ion-icon>
+        <strong>All Areas</strong>
+        <span class="total-count">({{getTotalEligibleCount()}} total eligible)</span>
+      </div>
+    </ion-select-option>
+
+    <!-- Separator -->
+    <ion-select-option disabled class="separator-option">
+      ──────────────────
+    </ion-select-option>
+
+    <!-- Individual Areas -->
+    <ion-select-option
+      *ngFor="let area of availableAreas"
+      [value]="area.AreaCode">
+      {{area.AreaName}} ({{area.EligibleRegistrants}} eligible)
+    </ion-select-option>
+  </ion-select>
+</div>
+
         <!-- Eligible Count Display -->
         <div class="eligible-chip" *ngIf="eligibleCount > 0">
           <ion-icon name="people-outline"></ion-icon>
           <span>{{eligibleCount}} Eligible Registrants</span>
         </div>
-        
+
         <!-- Draw Button -->
-        <button 
+        <button
           type="submit"
           class="draw-button"
           [disabled]="raffleForm.invalid || isDrawing || eligibleCount === 0 || hasPendingWinners()"
@@ -82,19 +98,19 @@
             Drawing...
           </span>
         </button>
-        
+
         <!-- Disabled Message -->
         <div class="disabled-message" *ngIf="hasPendingWinners()">
           <ion-icon name="warning-outline"></ion-icon>
           Please confirm all winners before starting a new draw
         </div>
-        
+
       </form>
     </div>
 
     <!-- Right Panel - Winners -->
     <div class="panel right-panel" [class.show]="winners.length > 0 || drawingAnimation">
-      
+
       <!-- Drawing Animation -->
       <div class="drawing-animation" *ngIf="drawingAnimation">
         <div class="animation-content">
@@ -113,7 +129,7 @@
 
       <!-- Winners Display -->
       <div class="winners-section" *ngIf="winners.length > 0 && !drawingAnimation">
-        
+
         <!-- Winners Header -->
         <div class="winners-header">
           <div class="header-content">
@@ -123,18 +139,18 @@
               <span class="winner-count">{{winners.length}} Winner{{winners.length > 1 ? 's' : ''}}</span>
             </div>
           </div>
-          
+
           <!-- Bulk Actions -->
           <div class="bulk-actions">
-            <button 
+            <button
               class="bulk-btn confirm-all"
               (click)="bulkConfirm('valid_winner')"
               [disabled]="!hasPendingWinners()">
               <ion-icon name="checkmark-circle"></ion-icon>
               Confirm All
             </button>
-            
-            <button 
+
+            <button
               class="bulk-btn reject-all"
               (click)="bulkConfirm('invalid_winner')"
               [disabled]="!hasPendingWinners()">
@@ -143,51 +159,59 @@
             </button>
           </div>
         </div>
-        
         <!-- Winners List -->
         <div class="winners-list">
-          <div 
-            *ngFor="let winner of winners; let i = index; trackBy: trackByWinnerId" 
+          <div
+            *ngFor="let winner of winners; let i = index; trackBy: trackByWinnerId"
             class="winner-card"
             [class.confirmed]="winner.status === 'valid_winner'"
             [class.rejected]="winner.status === 'invalid_winner'"
             [class.slide-out]="winner.animating"
             [@slideAnimation]="winner.status">
-            
+
             <div class="winner-number">{{i + 1}}</div>
-            
+
             <div class="winner-info">
-              <h3>{{winner.consumerName}}</h3>
-              <div class="winner-details">
-                <span class="account">Account: {{winner.accountNumber}}</span>
-                <span class="area">{{winner.AreaName}}</span>
+              <!-- Primary: Stub Number + Consumer Name -->
+              <div class="primary-info">
+                <h1>
+                  <span class="stub-number">Stub #{{winner.stubNumber}}</span>
+                  <span class="consumer-name">{{winner.consumerName}}</span>
+                </h1>
               </div>
-              <p class="address">{{winner.consumerAddress}}</p>
+
+              <!-- Secondary: Account Number -->
+              <div class="secondary-info">
+                <span class="account-badge">{{winner.accountNumber}}</span>
+                <span class="account-badge"> {{winner.consumerAddress}}</span>
+              </div>
+
+
             </div>
-            
+
             <div class="winner-actions">
               <div class="status-badge" [class]="getStatusClass(winner.status)">
                 {{getStatusText(winner.status)}}
               </div>
-              
+
               <div class="action-buttons" *ngIf="isPendingValidation(winner.status)">
-                <button 
+                <button
                   class="action-btn confirm"
                   (click)="confirmWinner(winner, 'valid_winner')">
                   <ion-icon name="checkmark"></ion-icon>
                 </button>
-                
-                <button 
+
+                <button
                   class="action-btn reject"
                   (click)="confirmWinner(winner, 'invalid_winner')">
                   <ion-icon name="close"></ion-icon>
                 </button>
               </div>
             </div>
-            
+
           </div>
         </div>
-        
+
         <!-- New Draw Button -->
         <div class="new-draw-section" *ngIf="!hasPendingWinners()">
           <button class="new-draw-btn" (click)="newDraw()">
@@ -195,10 +219,10 @@
             Start New Draw
           </button>
         </div>
-        
+
       </div>
     </div>
-    
+
   </div>
 
 </ion-content>
@@ -695,19 +719,19 @@
     gap: 1rem;
     padding: 1rem;
   }
-  
+
   .right-panel {
     transform: translateY(100%);
   }
-  
+
   .right-panel.show {
     transform: translateY(0);
   }
-  
+
   .bulk-actions {
     flex-direction: column;
   }
-  
+
   .winner-details {
     flex-direction: column;
     gap: 0.5rem;
@@ -718,12 +742,12 @@
   .winners-header h2 {
     font-size: 1.5rem;
   }
-  
+
   .winner-card {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .winner-actions {
     flex-direction: row;
     justify-content: center;
